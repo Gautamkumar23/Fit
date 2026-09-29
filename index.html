@@ -2,545 +2,1363 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calisthenics • 5-Day Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#020617">
+    <title>PROJECT: TITAN | Premium Fitness Tracker</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        titan: {
+                            bg: '#020617',      // Slate 950
+                            panel: '#0f172a',   // Slate 900
+                            card: '#1e293b',    // Slate 800
+                            border: '#334155',  // Slate 700
+                            primary: '#06b6d4', // Cyan 500
+                            primaryHover: '#0891b2', 
+                            accent: '#3b82f6',  // Blue 500
+                            success: '#10b981', // Emerald 500
+                            danger: '#ef4444',  // Red 500
+                            textMain: '#f8fafc',
+                            textMuted: '#94a3b8'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Rajdhani', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
         body {
-            background: #f8fafc;
-            padding: 20px;
+            background-color: #020617;
+            color: #f8fafc;
+            overscroll-behavior-y: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        /* Header */
-        .header {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border: 1px solid #e2e8f0;
+        .fitness-button { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fitness-button:active { transform: scale(0.96); }
+
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
         }
 
-        h1 {
-            color: #1e3a8a;
-            font-size: 2rem;
-            margin-bottom: 5px;
+        .checkbox-custom:checked + label .checkbox-box {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+        .checkbox-custom:checked + label .checkbox-box i { display: block; color: white; }
+
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(12px); } 
+            to { opacity: 1; transform: translateY(0); } 
         }
 
-        .subtitle {
-            color: #64748b;
+        .rest-timer-active { animation: glowPulse 2s infinite; }
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.3); border-color: rgba(6, 182, 212, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.6); border-color: rgba(6, 182, 212, 1); }
         }
 
-        /* Day Navigation */
-        .day-nav {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            background: white;
-            padding: 12px;
-            border-radius: 40px;
-            border: 1px solid #e2e8f0;
-            position: sticky;
-            top: 10px;
-            z-index: 100;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .day-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 30px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            background: #f1f5f9;
-            color: #334155;
-            transition: all 0.2s;
-            flex: 1;
-            min-width: 90px;
-        }
-
-        .day-btn:hover {
-            background: #e2e8f0;
-        }
-
-        .day-btn.active {
-            background: #1e3a8a;
-            color: white;
-        }
-
-        /* Day Sections */
-        .day-section {
-            display: none;
-        }
-
-        .day-section.active {
-            display: block;
-        }
-
-        /* Day Header */
-        .day-header {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 5px solid #1e3a8a;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #1e3a8a;
-        }
-
-        /* Exercise Grid */
-        .exercise-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px;
-        }
-
-        /* Exercise Card */
-        .exercise-card {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .exercise-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e3a8a;
-        }
-
-        .sets-reps {
-            background: #e2e8f0;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            color: #1e293b;
-        }
-
-        /* GIF Container */
-        .gif-container {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: center;
-            border: 1px solid #e2e8f0;
-        }
-
-        .exercise-gif {
-            width: 140px;
-            height: 140px;
-            object-fit: contain;
-        }
-
-        /* Notes */
-        .notes {
-            color: #475569;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            padding: 8px;
-            background: #f8fafc;
-            border-radius: 6px;
-        }
-
-        /* Tips */
-        .tips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .tip {
-            background: #f1f5f9;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            color: #475569;
-            border: 1px solid #e2e8f0;
-        }
-
-        /* Tracker */
-        .tracker {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .tracker input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: #1e3a8a;
-        }
-
-        .tracker label {
-            color: #475569;
-            font-size: 0.9rem;
-        }
-
-        .weight-input {
-            margin-left: auto;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 4px 8px;
-            border-radius: 6px;
-            width: 70px;
-            font-size: 0.85rem;
-        }
-
-        /* Progress Bar */
-        .progress-bar-container {
-            background: rgb(255, 255, 255);
-            border-radius: 30px;
-            padding: 15px 20px;
-            margin-bottom: 25px;
-            border: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .progress-label {
-            color: #1e3a8a;
-            font-weight: 500;
-            min-width: 100px;
-        }
-
-        .progress-bar {
-            flex: 1;
-            height: 10px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: #1e3a8a;
-            transition: width 0.3s;
-        }
-
-        #progress-text {
-            color: #1e3a8a;
-            font-weight: 500;
-            min-width: 100px;
-        }
-
-        /* Footer Sections */
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-top: 25px;
-        }
-
-        .info-section {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .info-section h3 {
-            color: #1e3a8a;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-        }
-
-        .tech-list {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .tech-item {
-            background: #f8fafc;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .tech-item strong {
-            color: #1e3a8a;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .tech-item span {
-            color: #64748b;
-            font-size: 0.85rem;
-        }
-
-        .nutrition-item {
-            background: #f8fafc;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border: 1px solid #e2e8f0;
-            color: #475569;
-        }
-
-        @media (max-width: 768px) {
-            .day-nav { flex-direction: column; border-radius: 20px; }
-            .footer-grid { grid-template-columns: 1fr; }
-        }
+        #toast-container { z-index: 1000; }
+        
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>CALISTHENICS TRACKER</h1>
-            <div class="subtitle">5-Day Split • Anime Physique</div>
-        </div>
+<body class="antialiased flex flex-col h-screen overflow-hidden selection:bg-titan-primary selection:text-white">
 
-        <!-- Progress -->
-        <div class="progress-bar-container">
-            <span class="progress-label">Weekly Progress</span>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
+    <!-- Top Navigation Bar -->
+    <header class="glass-panel px-5 py-4 flex justify-between items-center z-10 shrink-0 border-b border-titan-border">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-titan-primary to-titan-accent flex items-center justify-center shadow-lg shadow-titan-primary/20">
+                <i class="fa-solid fa-dumbbell text-white text-sm"></i>
             </div>
-            <span id="progress-text">0/30</span>
+            <div>
+                <h1 class="text-xl font-display font-bold tracking-wide text-white leading-tight uppercase">Titan Protocol</h1>
+                <div class="text-xs font-medium text-titan-textMuted uppercase tracking-wider" id="date-display">...</div>
+            </div>
         </div>
-
-        <!-- Day Navigation -->
-        <div class="day-nav">
-            <button class="day-btn active" onclick="showDay(1)">Day 1 Push</button>
-            <button class="day-btn" onclick="showDay(2)">Day 2 Back</button>
-            <button class="day-btn" onclick="showDay(3)">Day 3 Arms</button>
-            <button class="day-btn" onclick="showDay(4)">Day 4 Legs</button>
-            <button class="day-btn" onclick="showDay(5)">Day 5 Full</button>
+        <div class="flex flex-col items-end text-right">
+            <div class="text-xs font-medium text-titan-textMuted uppercase tracking-wider">CYCLE <span class="text-white font-bold" id="cycle-display">W1</span></div>
+            <div class="text-[10px] font-bold mt-0.5 px-2 py-0.5 rounded bg-titan-success/10 text-titan-success tracking-widest uppercase" id="phase-display">BUILD</div>
         </div>
+    </header>
 
-        <!-- Day Sections -->
-        <div id="day1" class="day-section active">
-            <div class="day-header">🔥 DAY 1: PUSH + CORE</div>
-            <div class="exercise-grid" id="grid1"></div>
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 pb-28 space-y-6 relative" id="main-content"></main>
+
+    <!-- Rest Timer Floating Widget -->
+    <div id="rest-timer" class="hidden fixed bottom-24 right-4 z-30 fade-in">
+        <div class="glass-panel bg-titan-panel rounded-full px-5 py-3 border border-titan-primary flex items-center gap-4 shadow-xl shadow-titan-primary/20">
+            <i class="fa-solid fa-stopwatch text-titan-primary animate-pulse"></i>
+            <span id="timer-display" class="font-display text-xl font-bold text-white tracking-widest">00:00</span>
+            <button onclick="app.stopRestTimer()" class="w-8 h-8 rounded-full bg-titan-card flex items-center justify-center text-titan-textMuted hover:text-white hover:bg-titan-danger transition-colors">
+                <i class="fa-solid fa-times text-sm"></i>
+            </button>
         </div>
+    </div>
 
-        <div id="day2" class="day-section">
-            <div class="day-header">💪 DAY 2: BACK + OBLIQUES</div>
-            <div class="exercise-grid" id="grid2"></div>
-        </div>
+    <!-- Bottom Navigation Tabs (Expanded with Meals) -->
+    <nav class="glass-panel border-t border-titan-border absolute bottom-0 w-full h-20 flex justify-around items-center px-1 z-20 shrink-0 pb-safe">
+        <button onclick="app.navigate('dashboard')" class="nav-btn flex-1 h-full flex flex-col justify-center items-center gap-1.5 text-titan-textMuted hover:text-titan-primary transition-colors" data-target="dashboard">
+            <i class="fa-solid fa-house text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold tracking-widest uppercase">Home</span>
+        </button>
+        <button onclick="app.navigate('workout')" class="nav-btn flex-1 h-full flex flex-col justify-center items-center gap-1.5 text-titan-textMuted hover:text-titan-primary transition-colors" data-target="workout">
+            <i class="fa-solid fa-bolt text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold tracking-widest uppercase">Train</span>
+        </button>
+        <button onclick="app.navigate('nutrition')" class="nav-btn flex-1 h-full flex flex-col justify-center items-center gap-1.5 text-titan-textMuted hover:text-titan-primary transition-colors" data-target="nutrition">
+            <i class="fa-solid fa-utensils text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold tracking-widest uppercase">Fuel</span>
+        </button>
+        <button onclick="app.navigate('meals')" class="nav-btn flex-1 h-full flex flex-col justify-center items-center gap-1.5 text-titan-textMuted hover:text-titan-primary transition-colors" data-target="meals">
+            <i class="fa-solid fa-bowl-food text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold tracking-widest uppercase">Meals</span>
+        </button>
+        <button onclick="app.navigate('progress')" class="nav-btn flex-1 h-full flex flex-col justify-center items-center gap-1.5 text-titan-textMuted hover:text-titan-primary transition-colors" data-target="progress">
+            <i class="fa-solid fa-chart-simple text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold tracking-widest uppercase">Stats</span>
+        </button>
+        <button onclick="app.navigate('psychology')" class="nav-btn flex-1 h-full flex flex-col justify-center items-center gap-1.5 text-titan-textMuted hover:text-titan-primary transition-colors" data-target="psychology">
+            <i class="fa-solid fa-brain text-lg mb-0.5"></i>
+            <span class="text-[9px] font-bold tracking-widest uppercase">Mind</span>
+        </button>
+    </nav>
 
-        <div id="day3" class="day-section">
-            <div class="day-header">💪 DAY 3: BICEPS & SHOULDERS</div>
-            <div class="exercise-grid" id="grid3"></div>
-        </div>
+    <div id="toast-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-sm px-4 pointer-events-none flex flex-col gap-2"></div>
 
-        <div id="day4" class="day-section">
-            <div class="day-header">🦵 DAY 4: LEGS & GLUTES</div>
-            <div class="exercise-grid" id="grid4"></div>
-        </div>
-
-        <div id="day5" class="day-section">
-            <div class="day-header">⚡ DAY 5: FULL BODY CIRCUIT</div>
-            <div class="exercise-grid" id="grid5"></div>
-        </div>
-
-        <!-- Footer Info -->
-        <div class="footer-grid">
-            <div class="info-section">
-                <h3>⚡ Intensity Techniques</h3>
-                <div class="tech-list">
-                    <div class="tech-item"><strong>3-1-3-1</strong><span>3s down, 1s pause, 3s up, 1s squeeze</span></div>
-                    <div class="tech-item"><strong>Drop Sets</strong><span>Fail → lighter → fail (no rest)</span></div>
-                    <div class="tech-item"><strong>Rest-Pause</strong><span>Fail → 15s rest → fail again (3x)</span></div>
-                    <div class="tech-item"><strong>Partial Reps</strong><span>10 partials after failure</span></div>
+    <!-- Form Guide Modal -->
+    <div id="form-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm transition-opacity">
+        <div class="bg-titan-panel w-full max-w-lg rounded-2xl border border-titan-border overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+            <div class="px-5 py-4 border-b border-titan-border flex justify-between items-center bg-titan-card">
+                <div>
+                    <h3 id="modal-title" class="text-lg font-display font-bold text-white uppercase tracking-wider">Exercise Name</h3>
+                    <span class="text-[10px] text-titan-primary font-bold tracking-widest uppercase">Form & Biomechanics</span>
                 </div>
+                <button onclick="document.getElementById('form-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-titan-border flex items-center justify-center text-titan-textMuted hover:text-white hover:bg-titan-danger transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
             </div>
-            <div class="info-section">
-                <h3>🍚 Nutrition</h3>
-                <div class="nutrition-item">• Protein: 30g within 30 min post-workout</div>
-                <div class="nutrition-item">• Water: 4L daily</div>
-                <div class="nutrition-item">• Creatine: 5g daily</div>
-                <div class="nutrition-item">• Vacuum: 4x30 sec holds</div>
-            </div>
+            <div id="form-modal-content" class="p-0 overflow-y-auto w-full"></div>
         </div>
     </div>
 
     <script>
-        // Exercise data
-        const exercises = {
-            day1: [
-                { name: "Decline Push-Ups", sets: "4x15-20", gif: "assets/pushday/Decline-Push-Up.gif", notes: "Feet elevated on chair • Upper chest", tips: ["Hands shoulder-width", "Chest to floor", "3 sec down"] },
-                { name: "Dumbbell Floor Press", sets: "4x20-25", gif: "assets/pushday/dumbbell-alternating-floor-press.gif", notes: "Slow 3-second descent", tips: ["Elbows 45°", "Touch floor", "Explosive up"] },
-                { name: "Pike Push-Ups", sets: "3x12-15", gif: "assets/pushday/pike_pushup.gif", notes: "Vertical push for shoulders", tips: ["Hips up", "Head through", "Straight legs"] },
-                { name: "Dumbbell Flys", sets: "3x20-25", gif: "assets/pushday/one-arm-dumbbell-fly.gif", notes: "Stretch at bottom", tips: ["Slight elbow bend", "Hug motion", "Squeeze chest"] },
-                { name: "Tricep Extensions", sets: "4x15-20", gif: "assets/pushday/Dumbbell-Triceps-Extension.gif", notes: "2 hands on dumbbell", tips: ["Elbows tight", "Full extension", "Control down"] },
-                { name: "Tricep Dips", sets: "3xFAIL", gif: "assets/pushday/Triceps-Dips-on-Floor.gif", notes: "Between chairs to failure", tips: ["Shoulders down", "90° elbows", "Legs extended"] },
-                { name: "Dragon Flag Negatives", sets: "3x8-12", gif: "assets/pushday/Dragon_Flag.gif", notes: "Slow controlled descent", tips: ["Grip bench", "Body straight", "Lower slowly"] }
-            ],
-            day2: [
-                { name: "Towel Door Rows", sets: "5x15-20", gif: "assets/backday/towelrows.gif", notes: "Anchor towel, lean back", tips: ["Lean 45°", "Pull to chest", "Squeeze back"] },
-                { name: "Table Rows", sets: "4xFAIL", gif: "assets/backday/Table-Inverted-Row.gif", notes: "Under sturdy table", tips: ["Body straight", "Chest to table", "Squeeze at top"] },
-                { name: "Single-Arm Rows", sets: "4x18-22", gif: "assets/backday/Dumbbell-Row.gif", notes: "Knee on chair", tips: ["Flat back", "Pull to hip", "Squeeze at top"] },
-                { name: "Reverse Snow Angels", sets: "3x15", gif: "assets/backday/Reverse-Snow-Angel.gif", notes: "Prone on floor", tips: ["Squeeze glutes", "Thumbs up", "Squeeze shoulders"] },
-                { name: "Dumbbell Pullovers", sets: "3x15-20", gif: "assets/backday/Dumbbell-Pullover.gif", notes: "Stretch lats", tips: ["Arms straight", "Lower behind head", "Pull with lats"] },
-                { name: "Face Pulls (Towel)", sets: "4x20", gif: "assets/backday/towel-face-pull.gif", notes: "Door anchor", tips: ["Pull to forehead", "External rotation", "Squeeze rear"] },
-                { name: "Side Bends + Bicycle", sets: "4x20", gif: "assets/backday/Bicycle-Crunch.gif", notes: "Obliques superset", tips: ["Straight back", "Reach down", "Crunch opposite"] }
-            ],
-            day3: [
-                { name: "Lateral Raises", sets: "5x25-30", gif: "assets/shoulderday/Dumbbell-Lateral-Raise.gif", notes: "Light weight, perfect form", tips: ["Slight lean", "Lead elbows", "Pour at top"] },
-                { name: "Front Raises", sets: "4x20", gif: "assets/shoulderday/Alternating-Dumbbell-Front-Raise.gif", notes: "Front delts", tips: ["Palms down", "Shoulder height", "Control down"] },
-                { name: "Rear Delt Raises", sets: "4x20", gif: "assets/shoulderday/rear_dealtraises.gif", notes: "Lean forward 45°", tips: ["Hinge at hips", "Thumbs up", "Squeeze back"] },
-                { name: "Bicep 21s", sets: "3x21", gif: "assets/shoulderday/bicep21s.jpeg", notes: "7-7-7 with dumbbell", tips: ["Elbows pinned", "Squeeze peak", "No swing"] },
-                { name: "Hammer Curls", sets: "4x20", gif: "assets/shoulderday/hammercurl.gif", notes: "Brachialis focus", tips: ["Palms facing", "Squeeze peak", "Control down"] },
-                { name: "Wrist Curls", sets: "4x30", gif: "assets/shoulderday/wristcurl.gif", notes: "Palms up & down", tips: ["Wrists on knee", "Full range", "Squeeze hard"] },
-                { name: "L-Sit + Leg Raises", sets: "3xFAIL", gif: "assets/shoulderday/L-Sit.gif", notes: "Core finisher", tips: ["Press down", "Legs parallel", "Point toes"] }
-            ],
-            day4: [
-                { name: "Bulgarian Split Squats", sets: "4x18-22", gif: "assets/legday/Bodyweight-Bulgarian-Split-Squat.gif", notes: "Dumbbell in hand", tips: ["Front knee 90°", "Upright torso", "Drive through heel"] },
-                { name: "Glute Bridges", sets: "4x25", gif: "assets/legday/Dumbbell-Glute-Bridge.gif", notes: "Dumbbell on hips", tips: ["Feet close", "Squeeze glutes", "Hold 2 sec"] },
-                { name: "Calf Raises", sets: "5x30", gif: "assets/legday/Single-Leg-Standing-Calf-Raise.gif", notes: "Single leg with DB", tips: ["Full range", "Squeeze top", "Slow down"] },
-                { name: "Romanian Deadlifts", sets: "4x20", gif: "assets/legday/03001301-Dumbbell-Deadlift_Back_360.gif", notes: "Hamstring focus", tips: ["Hinge at hips", "Slight knee bend", "Feel stretch"] },
-                { name: "Lateral Lunges", sets: "3x15", gif: "assets/legday/side-lunge.gif", notes: "Adductor focus", tips: ["Step wide", "Push off", "Chest up"] },
-                { name: "Plank Complex", sets: "3x45s", gif: "assets/legday/body-saw-plank.gif", notes: "Front + side planks", tips: ["Body straight", "Squeeze glutes", "Breathe"] }
-            ],
-            day5: [
-                { name: "Burpee to Push-Up", sets: "4x12", gif: "assets/fullday/Burpee-with-Push-Up.gif", notes: "Explosive full body", tips: ["Chest to floor", "Jump up", "Soft landing"] },
-                { name: "DB Clean & Press", sets: "4x10", gif: "assets/fullday/Dumbbell-Power-Clean.gif", notes: "Triple extension", tips: ["Explosive hips", "Catch and press", "Core tight"] },
-                { name: "Jump Squats", sets: "4x15", gif: "assets/fullday/Jump-Squat.gif", notes: "Plyometric", tips: ["Deep squat", "Explode up", "Land soft"] },
-                { name: "Towel Rows", sets: "4x15", gif: "assets/back day/towelrows.gif", notes: "Back in circuit", tips: ["Lean back", "Squeeze blades", "Pull to chest"] },
-                { name: "Plank to Push-Up", sets: "4x10", gif: "assets/fullday/Plank-to-Pushup.jpeg", notes: "Stability", tips: ["One arm at a time", "Hips stable", "Core tight"] },
-                { name: "Alt Bicep Curls", sets: "4x20", gif: "assets/fullday/Dumbbell-Curl.gif", notes: "Pump focus", tips: ["Control each", "Squeeze peak", "Elbows pinned"] },
-                { name: "Tricep Extensions", sets: "4x15", gif: "assets/push day/Dumbbell-Triceps-Extension.gif", notes: "Overhead", tips: ["Elbows in", "Full extension", "Control down"] },
-                { name: "Core Finisher", sets: "3 rounds", gif: "assets/fullday/Hanging-Knee-Raises.gif", notes: "20 knee raises, 30 russian twists, 45s flutter kicks", tips: ["Core tight", "Breathe", "No rest"] }
-            ]
+        const MASTER_PLAN = {
+            targets: { calories: 2650, protein: 140, carbs: 330, fats: 85, water: 3.5, creatine: 3 },
+            cycle: { hardWeeks: 3, deloadEvery: 4 },
+            baselineWeight: 68,
+            routine: {
+                1: {
+                    name: "Push + Anti-Extension Core",
+                    exercises: [
+                        { id: '1-1', name: "Decline Push-Ups", sets: 4, reps: "12-15", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=DECLINE+PUSH-UP%0A%0A[PUSH]+%5Bn=4%5D+%5B12-15+reps%5D&font=inter", cues: ["Elevate feet 12-18 inches.", "Brace core; rigid from heels to head.", "Lower until chest is 1 inch from floor (3s eccentric)."], mistakes: ["Flaring elbows to 90 degrees.", "Sagging lumbar spine."] },
+                        { id: '1-2', name: "Pike Push-Ups", sets: 4, reps: "8-12", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=PIKE+PUSH-UP%0A%0A[PUSH]+%5Bn=4%5D+%5B8-12+reps%5D&font=inter", cues: ["Hips high in inverted 'V'.", "Lower crown of head slightly ahead of hands.", "Push body backward and upward."], mistakes: ["Looking forward instead of at toes.", "Dropping elbows outward."] },
+                        { id: '1-3', name: "DB Floor Press", sets: 4, reps: "15-20", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=DB+FLOOR+PRESS%0A%0A[PUSH]+%5Bn=4%5D+%5B15-20+reps%5D&font=inter", cues: ["Knees bent, feet flat.", "Tuck elbows at 45 degrees.", "Press up to full extension."], mistakes: ["Bouncing triceps off floor.", "Losing shoulder blade retraction."] },
+                        { id: '1-4', name: "DB Lateral Raises", sets: 4, reps: "20-25", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=LATERAL+RAISE%0A%0A[PUSH]+%5Bn=4%5D+%5B20-25+reps%5D&font=inter", cues: ["Slight forward lean (10-15°).", "Lead with elbows.", "Stop when elbows parallel shoulders."], mistakes: ["Momentum swinging.", "Hands higher than elbows."] },
+                        { id: '1-5', name: "DB Overhead Tricep Ext", sets: 4, reps: "15-20", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=TRICEP+EXTENSION%0A%0A[PUSH]+%5Bn=4%5D+%5B15-20+reps%5D&font=inter", cues: ["Grip inner plate with both hands.", "Keep biceps close to ears.", "Extend forcefully."], mistakes: ["Flaring elbows excessively.", "Arching lower back."] },
+                        { id: '1-6', name: "Bench Dips", sets: 3, reps: "AMRAP", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=BENCH+DIPS%0A%0A[PUSH]+%5Bn=3%5D+%5BAMRAP%5D&font=inter", cues: ["Hands on sturdy chair edge.", "Elevate feet.", "Lower until shoulders just below elbows."], mistakes: ["Shoulders rolling forward.", "Hips drifting away from bench."] },
+                        { id: '1-7', name: "Plank", sets: 3, reps: "45s", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=PLANK%0A%0A[CORE]+%5Bn=3%5D+%5B45s%5D&font=inter", cues: ["Forearms parallel.", "Squeeze glutes to posteriorly tilt pelvis.", "Pull elbows toward toes mentally."], mistakes: ["Hips too high (pyramid).", "Hips too low (lumbar sag)."] },
+                        { id: '1-8', name: "Dead Bug", sets: 3, reps: "12/side", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=DEAD+BUG%0A%0A[CORE]+%5Bn=3%5D+%5B12/side%5D&font=inter", cues: ["Flatten lower back against floor.", "Extend opposite arm and leg slowly.", "Exhale fully during extension."], mistakes: ["Lower back leaving floor.", "Moving too quickly."] }
+                    ]
+                },
+                2: {
+                    name: "Pull + Anti-Rotation Core",
+                    exercises: [
+                        { id: '2-0', name: "Pull-Up / Negatives", sets: 5, reps: "AMRAP", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=PULL-UP%0A%0A[PULL]+%5Bn=5%5D+%5BAMRAP%5D&font=inter", cues: ["Dead hang start.", "Retract scapula before pulling.", "Drive elbows down to hips.", "Chin over bar."], mistakes: ["Kipping/swinging.", "Half reps.", "Not going to full dead hang."] },
+                        { id: '2-1', name: "Towel Door Rows", sets: 4, reps: "15-20", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=DOOR+ROW%0A%0A[PULL]+%5Bn=4%5D+%5B15-20+reps%5D&font=inter", cues: ["Wrap thick towel around both door handles.", "Straddle door, lean back.", "Squeeze lats at apex."], mistakes: ["Using biceps instead of back.", "Shrugging shoulders."] },
+                        { id: '2-2', name: "Table Inverted Rows", sets: 4, reps: "12-15", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=INVERTED+ROW%0A%0A[PULL]+%5Bn=4%5D+%5B12-15+reps%5D&font=inter", cues: ["Grip sturdy table edge.", "Body perfectly straight.", "Pull chest to underside."], mistakes: ["Flimsy table (safety hazard).", "Hips thrusting up."] },
+                        { id: '2-3', name: "DB Single-Arm Row", sets: 4, reps: "15-20/side", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=SINGLE+ARM+ROW%0A%0A[PULL]+%5Bn=4%5D+%5B15-20+reps%5D&font=inter", cues: ["Stagger stance.", "Let DB stretch lat fully at bottom.", "Pull toward hip/pocket, not chest."], mistakes: ["Twisting torso.", "Pulling vertically instead of arcing."] },
+                        { id: '2-4', name: "DB Pullover", sets: 3, reps: "15-20", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=PULLOVER%0A%0A[PULL]+%5Bn=3%5D+%5B15-20+reps%5D&font=inter", cues: ["Lie perpendicular on bench.", "Hold DB with diamond grip.", "Pull back using lats."], mistakes: ["Bending elbows too much."] },
+                        { id: '2-5', name: "Face Pulls", sets: 4, reps: "20-25", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=FACE+PULL%0A%0A[PULL]+%5Bn=4%5D+%5B20-25+reps%5D&font=inter", cues: ["Anchor high on door.", "Pull ends toward face.", "Externally rotate at end (bicep pose)."], mistakes: ["Pulling to chest.", "Leaning too far back."] },
+                        { id: '2-6', name: "DB Curls", sets: 4, reps: "12-15", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=BICEP+CURL%0A%0A[ARMS]+%5Bn=4%5D+%5B12-15+reps%5D&font=inter", cues: ["Supinated grip.", "Elbows pinned to ribs.", "Squeeze peak contraction."], mistakes: ["Swinging torso.", "Elbows drifting forward."] },
+                        { id: '2-7', name: "Hammer Curls", sets: 4, reps: "12-15", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=HAMMER+CURL%0A%0A[ARMS]+%5Bn=4%5D+%5B12-15+reps%5D&font=inter", cues: ["Neutral grip.", "Target brachialis.", "Control lowering (3s)."], mistakes: ["Momentum.", "Partial ROM."] },
+                        { id: '2-8', name: "Side Plank", sets: 3, reps: "40s/side", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=SIDE+PLANK%0A%0A[CORE]+%5Bn=3%5D+%5B40s%5D&font=inter", cues: ["Elbow under shoulder.", "Stack or stagger feet.", "Push hips upward."], mistakes: ["Hips sagging.", "Torso rotating forward."] },
+                        { id: '2-9', name: "Pallof Press", sets: 3, reps: "12/side", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=PALLOF+PRESS%0A%0A[CORE]+%5Bn=3%5D+%5B12/side%5D&font=inter", cues: ["Anchor towel in door.", "Stand perpendicular.", "Press hands straight out.", "Resist rotational pull."], mistakes: ["Leaning away.", "Torso twisting."] }
+                    ]
+                },
+                3: {
+                    name: "Shoulders & Arms + Abs",
+                    exercises: [
+                        { id: '3-1', name: "DB Lateral Raises", sets: 4, reps: "20-30", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=LATERAL+RAISE%0A%0A[PUSH]+%5Bn=4%5D+%5B20-30+reps%5D&font=inter", cues: ["Sweep DBs out and away.", "Constant tension."], mistakes: ["Trap takeover (shrugging)."] },
+                        { id: '3-2', name: "DB Front Raises", sets: 3, reps: "15-20", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=FRONT+RAISE%0A%0A[PUSH]+%5Bn=3%5D+%5B15-20+reps%5D&font=inter", cues: ["Raise to eye level.", "Resist gravity on descent."], mistakes: ["Swinging body backward."] },
+                        { id: '3-3', name: "Rear Delt Raises", sets: 4, reps: "20", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=REAR+DELT+RAISE%0A%0A[PULL]+%5Bn=4%5D+%5B20+reps%5D&font=inter", cues: ["Hinge at hips.", "Sweep arms laterally."], mistakes: ["Standing too upright."] },
+                        { id: '3-4', name: "DB Bicep 21s", sets: 3, reps: "21", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=BICEP+21S%0A%0A[ARMS]+%5Bn=3%5D+%5B21+reps%5D&font=inter", cues: ["7 bottom, 7 top, 7 full ROM."], mistakes: ["Rushing.", "Losing tension."] },
+                        { id: '3-5', name: "Incline Curls", sets: 3, reps: "12-15", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=INCLINE+CURL%0A%0A[ARMS]+%5Bn=3%5D+%5B12-15+reps%5D&font=inter", cues: ["Sit on incline.", "Let arms hang straight down."], mistakes: ["Elbows drifting forward."] },
+                        { id: '3-6', name: "Skull Crushers", sets: 3, reps: "12-15", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=SKULL+CRUSHER%0A%0A[ARMS]+%5Bn=3%5D+%5B12-15+reps%5D&font=inter", cues: ["Lie flat, arms angled backward.", "Extend using triceps only."], mistakes: ["Moving upper arm."] },
+                        { id: '3-7', name: "Wrist Curls", sets: 4, reps: "25-30", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=WRIST+CURL%0A%0A[ARMS]+%5Bn=4%5D+%5B25-30+reps%5D&font=inter", cues: ["Forearms on thighs.", "Roll DBs to fingertips."], mistakes: ["Using arm instead of wrist."] },
+                        { id: '3-8', name: "Hollow Body", sets: 3, reps: "40s", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=HOLLOW+BODY%0A%0A[CORE]+%5Bn=3%5D+%5B40s%5D&font=inter", cues: ["Press lower back into ground.", "Arms overhead."], mistakes: ["Arching back."] },
+                        { id: '3-9', name: "Ab Wheel / Rollout", sets: 3, reps: "10-15", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=AB+WHEEL%0A%0A[CORE]+%5Bn=3%5D+%5B10-15+reps%5D&font=inter", cues: ["Pelvis tucked.", "Roll forward until arms overhead."], mistakes: ["Arching back at extension."] }
+                    ]
+                },
+                4: {
+                    name: "Legs & Glutes + Core",
+                    exercises: [
+                        { id: '4-1', name: "Bulgarian Split Squats", sets: 4, reps: "15-20/leg", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=SPLIT+SQUAT%0A%0A[LEGS]+%5Bn=4%5D+%5B15-20+reps%5D&font=inter", cues: ["Rear foot elevated.", "Lower hips straight down.", "Drive through front heel."], mistakes: ["Front heel lifting."] },
+                        { id: '4-2', name: "DB RDLs", sets: 4, reps: "15-20", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=DB+RDL%0A%0A[LEGS]+%5Bn=4%5D+%5B15-20+reps%5D&font=inter", cues: ["Soft knees.", "Push hips backward.", "Keep DBs close to legs."], mistakes: ["Rounding lower back.", "Squatting."] },
+                        { id: '4-3', name: "Goblet Squats", sets: 4, reps: "20-25", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=GOBLET+SQUAT%0A%0A[LEGS]+%5Bn=4%5D+%5B20-25+reps%5D&font=inter", cues: ["Hold DB vertically.", "Drop hips between heels.", "Tall chest."], mistakes: ["Knees caving in."] },
+                        { id: '4-4', name: "Walking Lunges", sets: 3, reps: "12/leg", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=WALKING+LUNGE%0A%0A[LEGS]+%5Bn=3%5D+%5B12+reps%5D&font=inter", cues: ["Controlled steps.", "Back knee near floor."], mistakes: ["Tightrope walking."] },
+                        { id: '4-5', name: "Calf Raises", sets: 5, reps: "25-30", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=CALF+RAISE%0A%0A[LEGS]+%5Bn=5%5D+%5B25-30+reps%5D&font=inter", cues: ["Stand on step edge.", "Drive up onto big toe."], mistakes: ["Bouncing."] },
+                        { id: '4-6', name: "Glute Bridges", sets: 4, reps: "20-25", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=GLUTE+BRIDGE%0A%0A[LEGS]+%5Bn=4%5D+%5B20-25+reps%5D&font=inter", cues: ["DB on hips.", "Drive through heels.", "Squeeze glutes."], mistakes: ["Hyperextending back."] },
+                        { id: '4-7', name: "Plank Complex", sets: 3, reps: "45s", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=PLANK+COMPLEX%0A%0A[CORE]+%5Bn=3%5D+%5B45s%5D&font=inter", cues: ["Transition front→left→right.", "Maintain rigid structure."], mistakes: ["Dropping knees."] }
+                    ]
+                },
+                5: {
+                    name: "Upper Body Pump",
+                    exercises: [
+                        { id: '5-1', name: "Push-Ups", sets: 3, reps: "AMRAP", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=PUSH-UP%0A%0A[PUSH]+%5Bn=3%5D+%5BAMRAP%5D&font=inter", cues: ["Piston-like execution.", "Full lockout at top."], mistakes: ["Half-repping."] },
+                        { id: '5-2', name: "Pull-Ups / Rows", sets: 3, reps: "AMRAP", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=PULL-UP%0A%0A[PULL]+%5Bn=3%5D+%5BAMRAP%5D&font=inter", cues: ["Focus on metabolic stress.", "Constant tension."], mistakes: ["Dropping hips as fatigue sets in."] },
+                        { id: '5-3', name: "Lateral Raises", sets: 3, reps: "30", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=LATERAL+RAISE%0A%0A[PUSH]+%5Bn=3%5D+%5B30+reps%5D&font=inter", cues: ["High rep pacing.", "Chase the burn.", "Strict form."], mistakes: ["Using lower back to swing."] },
+                        { id: '5-4', name: "DB Curls", sets: 3, reps: "20", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=DB+CURL%0A%0A[ARMS]+%5Bn=3%5D+%5B20+reps%5D&font=inter", cues: ["Pump the muscle.", "Continuous motion."], mistakes: ["Resting at top/bottom."] },
+                        { id: '5-5', name: "Tricep Ext", sets: 3, reps: "20", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=TRICEP+EXT%0A%0A[ARMS]+%5Bn=3%5D+%5B20+reps%5D&font=inter", cues: ["Lock elbows in place.", "Full stretch at bottom."], mistakes: ["Elbows drifting."] },
+                        { id: '5-6', name: "Core Circuit", sets: 3, reps: "1 rnd", gif: "https://placehold.co/800x450/1e293b/06b6d4?text=CORE+CIRCUIT%0A%0A[CORE]+%5Bn=3%5D+%5B1+rnd%5D&font=inter", cues: ["Zero rest between exercises.", "Form over speed."], mistakes: ["Breaking tension."] }
+                    ]
+                },
+                6: { name: "ACTIVE RECOVERY", exercises: [] },
+                0: { name: "REST DAY", exercises: [] }
+            }
         };
 
-        // Track completed exercises
-        let totalExercises = 30;
-        let completedCount = 0;
+        const HABIT_SYSTEM = {
+            dailyHabits: [
+                { id: 'weighIn', name: 'Morning Weigh-In', icon: 'fa-weight-scale', description: 'Empty stomach, same time', time: 'Morning' },
+                { id: 'water', name: 'Water: 3.5L', icon: 'fa-droplet', description: '500ml on waking, sip through day', time: 'All day' },
+                { id: 'sunlight', name: 'Sunlight (10 min)', icon: 'fa-sun', description: 'Within 30 min of waking', time: 'Morning' },
+                { id: 'protein', name: 'Hit Protein (140g)', icon: 'fa-drumstick-bite', description: 'Spread across meals', time: 'All day' },
+                { id: 'creatine', name: 'Creatine (3-5g)', icon: 'fa-bolt', description: 'Any time, every day', time: 'Any' },
+                { id: 'vacuums', name: 'Stomach Vacuums', icon: 'fa-compress', description: '4 × 30 sec holds', time: 'Any' },
+                { id: 'workout', name: 'Training Session', icon: 'fa-dumbbell', description: 'Completed with intention', time: 'When scheduled' },
+                { id: 'steps', name: '8,000+ Steps', icon: 'fa-person-walking', description: 'NEAT for leanness', time: 'All day' },
+                { id: 'noPhone', name: 'No Phone 30min Before Bed', icon: 'fa-mobile-screen', description: 'Better sleep quality', time: 'Night' },
+                { id: 'sleep7', name: 'Sleep 7+ Hours', icon: 'fa-moon', description: 'Non-negotiable', time: 'Night' }
+            ],
+            weeklyCheckIn: [
+                { id: 'sleepQuality', question: 'How was your sleep quality this week?', options: ['Poor', 'Okay', 'Good', 'Excellent'] },
+                { id: 'motivation', question: 'Motivation level?', options: ['Low', 'Medium', 'High', 'Peak'] },
+                { id: 'jointPain', question: 'Any joint pain or nagging issues?', options: ['None', 'Mild', 'Moderate', 'Significant'] },
+                { id: 'hunger', question: 'Hunger levels?', options: ['Very Low', 'Normal', 'High', 'Starving'] }
+            ],
+            mealPresets: [
+                { name: '3 Whole Eggs', protein: 18, calories: 210, emoji: '🥚' },
+                { name: 'Chicken 200g', protein: 44, calories: 330, emoji: '🍗' },
+                { name: 'Whey (1 scoop)', protein: 25, calories: 120, emoji: '🥛' },
+                { name: 'Greek Yogurt 200g', protein: 20, calories: 130, emoji: '🥣' },
+                { name: 'Rice 1 cup cooked', protein: 4, calories: 205, emoji: '🍚' },
+                { name: 'Oats 100g', protein: 13, calories: 380, emoji: '🥣' },
+                { name: 'Salmon 150g', protein: 30, calories: 280, emoji: '🐟' },
+                { name: 'Paneer 100g', protein: 18, calories: 265, emoji: '🧀' },
+                { name: 'Dal 1 cup cooked', protein: 9, calories: 200, emoji: '🍲' },
+                { name: 'Peanut Butter 2 tbsp', protein: 8, calories: 190, emoji: '🥜' }
+            ],
+            proteinPerMeal: 35,
+            mealsPerDay: 4
+        };
 
-        // Load exercises
-        function loadExercises() {
-            for (let day = 1; day <= 5; day++) {
-                const grid = document.getElementById(`grid${day}`);
-                const dayExercises = exercises[`day${day}`];
+        class StateManager {
+            constructor() {
+                this.storageKey = 'titan_premium_data_v4';
+                this.today = new Date().toISOString().split('T')[0];
+                this.state = this.loadState();
+                this.ensureDailyInit();
+            }
+
+            loadState() {
+                const saved = localStorage.getItem(this.storageKey);
+                if (saved) {
+                    try { 
+                        const parsed = JSON.parse(saved); 
+                        if (parsed.meals === undefined) parsed.meals = [];
+                        if (parsed.habitStreaks === undefined) parsed.habitStreaks = {};
+                        if (parsed.weeklyCheckIns === undefined) parsed.weeklyCheckIns = [];
+                        if (parsed.steps === undefined) parsed.steps = {};
+                        if (parsed.sleepHours === undefined) parsed.sleepHours = {};
+                        if (parsed.notes === undefined) parsed.notes = {};
+                        if (parsed.bwAvg7d === undefined) parsed.bwAvg7d = null;
+                        return parsed;
+                    } catch(e) { console.error('Reset', e); }
+                }
+                return {
+                    startDate: this.today,
+                    dailyLogs: {},
+                    weeklyWeights: [],
+                    personalRecords: {}, 
+                    streak: 0,
+                    lastActive: null,
+                    meals: [],
+                    habitStreaks: {},
+                    weeklyCheckIns: [],
+                    steps: {},
+                    sleepHours: {},
+                    notes: {},
+                    bwAvg7d: null,
+                    stepsTarget: 8000,
+                    sleepTarget: 7
+                };
+            }
+
+            saveState() { localStorage.setItem(this.storageKey, JSON.stringify(this.state)); }
+
+            ensureDailyInit() {
+                if (!this.state.dailyLogs[this.today]) {
+                    this.state.dailyLogs[this.today] = {
+                        date: this.today,
+                        macros: { calories: 0, protein: 0, water: 0, creatine: 0 },
+                        checklist: { water: false, creatine: false, sleep7: false, vacuums: false, workout: false, weighIn: false, sunlight: false, protein: false, steps: false, noPhone: false },
+                        workoutData: {}, notes: '', _streakCounted: false
+                    };
+                    if (this.state.lastActive && this.state.lastActive !== this.today) {
+                        const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+                        if (this.state.lastActive !== yesterday.toISOString().split('T')[0]) this.state.streak = 0;
+                    }
+                    this.state.lastActive = this.today;
+                    this.saveState();
+                }
+            }
+
+            getTodayData() { return this.state.dailyLogs[this.today]; }
+            updateMacro(t, v) { this.state.dailyLogs[this.today].macros[t] = parseFloat(v) || 0; this.saveState(); }
+            
+            toggleChecklist(item) {
+                const val = !this.state.dailyLogs[this.today].checklist[item];
+                this.state.dailyLogs[this.today].checklist[item] = val;
+                this.saveState();
+                return val;
+            }
+
+            logExerciseSet(exId, setIdx, reps, weight) {
+                if (!this.state.dailyLogs[this.today].workoutData[exId]) this.state.dailyLogs[this.today].workoutData[exId] = {};
+                const entry = { reps: parseInt(reps) || 0, weight: parseFloat(weight) || 0 };
+                this.state.dailyLogs[this.today].workoutData[exId][setIdx] = entry;
+
+                const pr = this.state.personalRecords[exId];
+                const volume = entry.reps * (entry.weight || 1);
+                const prVolume = pr ? pr.reps * (pr.weight || 1) : 0;
                 
-                dayExercises.forEach((ex, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'exercise-card';
-                    card.innerHTML = `
-                        <div class="card-header">
-                            <span class="exercise-name">${ex.name}</span>
-                            <span class="sets-reps">${ex.sets}</span>
+                if (!pr || volume > prVolume) {
+                    this.state.personalRecords[exId] = { ...entry, date: this.today };
+                }
+                this.saveState();
+            }
+
+            getExerciseLog(exId) { return this.state.dailyLogs[this.today].workoutData[exId] || {}; }
+            
+            getLastSession(exId) {
+                const dates = Object.keys(this.state.dailyLogs).sort().reverse();
+                for (const d of dates) {
+                    if (d === this.today) continue;
+                    const log = this.state.dailyLogs[d].workoutData[exId];
+                    if (log && Object.keys(log).length > 0) return log;
+                }
+                return null;
+            }
+
+            logBodyWeight(kg) {
+                const num = parseFloat(kg);
+                if (isNaN(num) || num < 30 || num > 250) return;
+                this.state.weeklyWeights.push({ date: this.today, weight: num });
+                this.saveState();
+            }
+
+            getWeekNumber() {
+                const start = new Date(this.state.startDate);
+                const diffDays = Math.ceil(Math.abs(new Date() - start) / (1000 * 60 * 60 * 24));
+                return Math.floor((diffDays - 1) / 7) + 1;
+            }
+            
+            isDeloadWeek() { return this.getWeekNumber() % MASTER_PLAN.cycle.deloadEvery === 0; }
+
+            exportData() {
+                try {
+                    const dataStr = JSON.stringify(this.state, null, 2);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `titan_backup_${this.today}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } catch(e) {
+                    console.error('Export failed', e);
+                    alert('Export failed. Check console.');
+                }
+            }
+
+            updateHabitStreaks() {
+                const today = this.today;
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yStr = yesterday.toISOString().split('T')[0];
+                
+                HABIT_SYSTEM.dailyHabits.forEach(habit => {
+                    const todayDone = this.state.dailyLogs[today]?.checklist?.[habit.id];
+                    const yesterdayDone = this.state.dailyLogs[yStr]?.checklist?.[habit.id];
+                    
+                    if (!this.state.habitStreaks[habit.id]) this.state.habitStreaks[habit.id] = 0;
+                    
+                    if (todayDone) {
+                        if (yesterdayDone) {
+                            if (!this.state.dailyLogs[today]._streakCounted) {
+                                this.state.habitStreaks[habit.id]++;
+                            }
+                        } else {
+                            this.state.habitStreaks[habit.id] = 1;
+                        }
+                    }
+                });
+                this.state.dailyLogs[today]._streakCounted = true;
+                this.saveState();
+            }
+
+            getHabitStreak(habitId) { return this.state.habitStreaks[habitId] || 0; }
+
+            addMeal(name, protein, calories, emoji = '🍽️') {
+                this.state.meals.push({
+                    id: 'meal_' + Date.now() + Math.random(),
+                    name, protein: parseFloat(protein) || 0, calories: parseFloat(calories) || 0,
+                    emoji, date: this.today, time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                });
+                
+                const today = this.getTodayData();
+                today.macros.protein = (today.macros.protein || 0) + parseFloat(protein || 0);
+                today.macros.calories = (today.macros.calories || 0) + parseFloat(calories || 0);
+                
+                if (today.macros.protein >= MASTER_PLAN.targets.protein) {
+                    if (!today.checklist.protein) today.checklist.protein = true;
+                }
+                
+                this.updateHabitStreaks();
+                this.saveState();
+            }
+
+            removeMeal(mealId) {
+                const meal = this.state.meals.find(m => m.id === mealId);
+                if (!meal) return;
+                this.state.meals = this.state.meals.filter(m => m.id !== mealId);
+                const today = this.getTodayData();
+                today.macros.protein = Math.max(0, (today.macros.protein || 0) - meal.protein);
+                today.macros.calories = Math.max(0, (today.macros.calories || 0) - meal.calories);
+                this.saveState();
+            }
+
+            getTodayMeals() { return this.state.meals.filter(m => m.date === this.today); }
+
+            logSteps(count) {
+                this.state.steps[this.today] = parseInt(count) || 0;
+                if (parseInt(count) >= this.state.stepsTarget) {
+                    if (!this.state.dailyLogs[this.today].checklist.steps) {
+                        this.state.dailyLogs[this.today].checklist.steps = true;
+                        this.updateHabitStreaks();
+                    }
+                }
+                this.saveState();
+            }
+
+            logSleep(hours) {
+                const h = parseFloat(hours);
+                if (isNaN(h) || h < 0 || h > 16) return;
+                this.state.sleepHours[this.today] = h;
+                if (h >= this.state.sleepTarget) {
+                    if (!this.state.dailyLogs[this.today].checklist.sleep7) {
+                        this.state.dailyLogs[this.today].checklist.sleep7 = true;
+                        this.updateHabitStreaks();
+                    }
+                }
+                this.saveState();
+            }
+
+            get7DayAvgWeight() {
+                const sorted = [...this.state.weeklyWeights].sort((a,b) => a.date.localeCompare(b.date));
+                const last7 = sorted.slice(-7);
+                if (last7.length === 0) return null;
+                const avg = last7.reduce((sum, w) => sum + w.weight, 0) / last7.length;
+                this.state.bwAvg7d = parseFloat(avg.toFixed(2));
+                return this.state.bwAvg7d;
+            }
+
+            getWeeklyWeightChange() {
+                const sorted = [...this.state.weeklyWeights].sort((a,b) => a.date.localeCompare(b.date));
+                if (sorted.length < 2) return null;
+                const last7 = sorted.slice(-7);
+                const prev7 = sorted.slice(-14, -7);
+                if (prev7.length === 0) return null;
+                const avgLast = last7.reduce((s, w) => s + w.weight, 0) / last7.length;
+                const avgPrev = prev7.reduce((s, w) => s + w.weight, 0) / prev7.length;
+                return parseFloat((avgLast - avgPrev).toFixed(2));
+            }
+
+            checkFatigue() {
+                const recent = this.state.weeklyCheckIns.slice(-2);
+                if (recent.length < 2) return { status: 'unknown', message: 'Need more data', warnings: [] };
+                const latest = recent[recent.length - 1].answers;
+                const warnings = [];
+                if (latest.sleepQuality === 'Poor') warnings.push('Sleep quality low');
+                if (latest.motivation === 'Low') warnings.push('Motivation dropping');
+                if (latest.jointPain === 'Moderate' || latest.jointPain === 'Significant') warnings.push('Joint pain');
+                
+                if (warnings.length >= 2) return { status: 'deload', message: 'Consider deload week', warnings };
+                if (warnings.length === 1) return { status: 'caution', message: 'Monitor recovery', warnings };
+                return { status: 'optimal', message: 'Recovery on track', warnings: [] };
+            }
+
+            getOverloadSuggestion(exerciseId, targetReps) {
+                const lastSession = this.getLastSession(exerciseId);
+                if (!lastSession) return null;
+                const sets = Object.values(lastSession).filter(s => s.reps > 0);
+                if (sets.length === 0) return null;
+                
+                const avgReps = sets.reduce((s, x) => s + x.reps, 0) / sets.length;
+                const maxWeight = Math.max(...sets.map(s => s.weight || 0));
+                const targetMatch = String(targetReps).match(/\d+/g);
+                const targetMax = targetMatch ? parseInt(targetMatch[targetMatch.length - 1]) : 12;
+                
+                if (avgReps >= targetMax) {
+                    if (maxWeight > 0) return { type: 'weight', message: `Add 2.5kg → ${maxWeight + 2.5}kg` };
+                    return { type: 'reps', message: 'Add 1-2 reps or advance to harder variation' };
+                }
+                return { type: 'reps', message: `Aim for ${Math.min(Math.ceil(avgReps) + 2, targetMax)} reps` };
+            }
+        }
+
+        class App {
+            constructor() {
+                this.state = new StateManager();
+                this.currentView = 'dashboard';
+                this.restTimerInterval = null;
+                this.init();
+            }
+
+            playBeep(frequency = 880, duration = 200) {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.frequency.value = frequency;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration/1000);
+                    osc.start();
+                    osc.stop(ctx.currentTime + duration/1000);
+                } catch(e) { /* silent fail */ }
+            }
+
+            quickAddWater(amount) {
+                const current = this.state.getTodayData().macros.water || 0;
+                const newVal = Math.max(0, current + amount);
+                this.state.updateMacro('water', newVal.toFixed(2));
+                const dashWater = document.getElementById('dash-water');
+                if (dashWater) dashWater.textContent = `${newVal.toFixed(2)}L`;
+                this.showToast(`Water: ${newVal.toFixed(2)}L`, 'info');
+            }
+
+            quickAddCreatine() {
+                const current = this.state.getTodayData().checklist.creatine;
+                if (!current) {
+                    this.state.toggleChecklist('creatine');
+                    this.state.updateMacro('creatine', MASTER_PLAN.targets.creatine);
+                    this.state.updateHabitStreaks();
+                    this.showToast('Creatine logged.', 'success');
+                    this.navigate('dashboard');
+                }
+            }
+
+            init() {
+                this.updateHeader();
+                this.navigate(this.currentView);
+            }
+
+            updateHeader() {
+                const options = { weekday: 'long', month: 'short', day: 'numeric' };
+                document.getElementById('date-display').textContent = new Date().toLocaleDateString('en-US', options);
+                const week = this.state.getWeekNumber();
+                document.getElementById('cycle-display').textContent = `W${((week - 1) % 4) + 1}`;
+                
+                const phaseEl = document.getElementById('phase-display');
+                if (this.state.isDeloadWeek()) {
+                    phaseEl.textContent = 'DELOAD';
+                    phaseEl.className = 'text-[10px] font-bold mt-0.5 px-2 py-0.5 rounded bg-titan-accent/10 text-titan-accent tracking-widest uppercase';
+                } else {
+                    phaseEl.textContent = 'BUILD';
+                    phaseEl.className = 'text-[10px] font-bold mt-0.5 px-2 py-0.5 rounded bg-titan-success/10 text-titan-success tracking-widest uppercase';
+                }
+            }
+
+            navigate(view) {
+                this.currentView = view;
+                const container = document.getElementById('main-content');
+                container.innerHTML = '';
+                
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    if (btn.dataset.target === view) {
+                        btn.classList.add('text-titan-primary'); btn.classList.remove('text-titan-textMuted');
+                    } else {
+                        btn.classList.remove('text-titan-primary'); btn.classList.add('text-titan-textMuted');
+                    }
+                });
+
+                switch(view) {
+                    case 'dashboard': this.renderDashboard(container); break;
+                    case 'workout': this.renderWorkout(container); break;
+                    case 'nutrition': this.renderNutrition(container); break;
+                    case 'meals': this.renderMeals(container); break;
+                    case 'progress': this.renderProgress(container); break;
+                    case 'psychology': this.renderPsychology(container); break;
+                }
+            }
+
+            showToast(msg, type='info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                const colors = {
+                    success: 'border-titan-success text-titan-success bg-titan-success/10',
+                    error: 'border-titan-danger text-titan-danger bg-titan-danger/10',
+                    info: 'border-titan-primary text-titan-primary bg-titan-primary/10'
+                };
+                const icon = type === 'success' ? 'fa-check' : type === 'error' ? 'fa-exclamation' : 'fa-info';
+                
+                toast.className = `glass-panel border-l-4 ${colors[type]} p-4 rounded-xl shadow-lg shadow-black/50 text-sm font-medium flex items-center mb-3 fade-in`;
+                toast.innerHTML = `<i class="fa-solid ${icon} mr-3"></i><span>${msg}</span>`;
+                
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-10px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 2500);
+            }
+
+            renderDashboard(container) {
+                const today = this.state.getTodayData();
+                const calPercent = Math.min((today.macros.calories / MASTER_PLAN.targets.calories) * 100, 100) || 0;
+                const proPercent = Math.min((today.macros.protein / MASTER_PLAN.targets.protein) * 100, 100) || 0;
+                const tasksDone = Object.values(today.checklist).filter(Boolean).length;
+                const totalTasks = HABIT_SYSTEM.dailyHabits.length;
+                
+                let html = `
+                    <div class="fade-in space-y-5">
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                                <i class="fa-solid fa-chart-pie text-8xl text-white"></i>
+                            </div>
+                            <div class="flex justify-between items-center mb-5">
+                                <h2 class="text-xs font-bold text-titan-textMuted uppercase tracking-widest">Daily Telemetry</h2>
+                                <div class="text-xs font-bold bg-titan-panel px-3 py-1 rounded-full border border-titan-border">
+                                    STREAK: <span class="text-titan-primary">${this.state.state.streak}🔥</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-around items-center mb-6 relative z-10">
+                                ${this.createProgressRing('KCAL', today.macros.calories.toFixed(0), MASTER_PLAN.targets.calories, calPercent, '#06b6d4')}
+                                ${this.createProgressRing('PRO (g)', today.macros.protein.toFixed(0), MASTER_PLAN.targets.protein, proPercent, '#3b82f6')}
+                            </div>
                         </div>
-                        <div class="gif-container">
-                            <img class="exercise-gif" src="${ex.gif}" alt="${ex.name}" onerror="this.src='https://via.placeholder.com/140x140/e2e8f0/1e3a8a?text=GIF'">
+
+                        <!-- Quick Fuel Log -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="glass-panel p-4 rounded-2xl bg-titan-card border border-titan-border">
+                                <div class="flex items-center justify-between mb-2">
+                                    <i class="fa-solid fa-droplet text-blue-400 text-sm"></i>
+                                    <span class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest">Water</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="app.quickAddWater(-0.25)" class="w-8 h-8 rounded-lg bg-titan-panel border border-titan-border text-titan-textMuted hover:text-white transition-colors"><i class="fa-solid fa-minus text-xs"></i></button>
+                                    <span class="flex-1 text-center font-display font-bold text-white text-lg" id="dash-water">${(today.macros.water || 0).toFixed(2)}L</span>
+                                    <button onclick="app.quickAddWater(0.25)" class="w-8 h-8 rounded-lg bg-titan-panel border border-titan-border text-titan-primary hover:bg-titan-primary hover:text-white transition-colors"><i class="fa-solid fa-plus text-xs"></i></button>
+                                </div>
+                            </div>
+                            <div class="glass-panel p-4 rounded-2xl bg-titan-card border border-titan-border">
+                                <div class="flex items-center justify-between mb-2">
+                                    <i class="fa-solid fa-bolt text-yellow-400 text-sm"></i>
+                                    <span class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest">Creatine</span>
+                                </div>
+                                <button onclick="app.quickAddCreatine()" class="w-full py-2 rounded-lg ${today.checklist.creatine ? 'bg-titan-success/20 border border-titan-success text-titan-success' : 'bg-titan-panel border border-titan-border text-titan-textMuted hover:border-yellow-400 hover:text-yellow-400'} font-bold text-xs uppercase tracking-widest transition-colors">
+                                    ${today.checklist.creatine ? '✓ Taken' : '+ Log 3g'}
+                                </button>
+                            </div>
                         </div>
-                        <div class="notes">${ex.notes}</div>
-                        <div class="tips">
-                            ${ex.tips.map(tip => `<span class="tip">${tip}</span>`).join('')}
+
+                        <!-- Sleep & Steps Log -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="glass-panel p-4 rounded-2xl bg-titan-card border border-titan-border">
+                                <div class="flex items-center justify-between mb-2">
+                                    <i class="fa-solid fa-moon text-purple-400 text-sm"></i>
+                                    <span class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest">Sleep</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" inputmode="decimal" step="0.5" id="sleep-input" placeholder="7.5" value="${this.state.state.sleepHours[this.state.today] || ''}" class="flex-1 w-full bg-titan-panel border border-titan-border rounded-lg px-2 py-2 text-center font-display font-bold text-white focus:outline-none focus:border-purple-400">
+                                    <button onclick="app.logSleep()" class="px-3 py-2 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-purple-500/30 transition-colors">HRS</button>
+                                </div>
+                            </div>
+                            <div class="glass-panel p-4 rounded-2xl bg-titan-card border border-titan-border">
+                                <div class="flex items-center justify-between mb-2">
+                                    <i class="fa-solid fa-person-walking text-emerald-400 text-sm"></i>
+                                    <span class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest">Steps</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" inputmode="numeric" id="steps-input" placeholder="8000" value="${this.state.state.steps[this.state.today] || ''}" class="flex-1 w-full bg-titan-panel border border-titan-border rounded-lg px-2 py-2 text-center font-display font-bold text-white focus:outline-none focus:border-emerald-400">
+                                    <button onclick="app.logSteps()" class="px-3 py-2 bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-500/30 transition-colors">LOG</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="tracker">
-                            <input type="checkbox" id="day${day}-ex${index}" onchange="updateProgress()">
-                            <label for="day${day}-ex${index}">Done</label>
-                            <input type="text" class="weight-input" placeholder="lbs/kg" onchange="saveNotes(this, 'day${day}-ex${index}')">
+
+                        <!-- Daily Habit Chain -->
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card border border-titan-border">
+                            <div class="flex items-center justify-between mb-4 border-b border-titan-border pb-3">
+                                <h2 class="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                                    <i class="fa-solid fa-link text-titan-primary"></i> Daily Chain
+                                </h2>
+                                <span class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest">${tasksDone}/${totalTasks} Done</span>
+                            </div>
+                            <div class="w-full bg-titan-panel rounded-full h-1.5 mb-4 overflow-hidden border border-titan-border">
+                                <div class="bg-gradient-to-r from-titan-primary to-titan-success h-full transition-all duration-700" style="width: ${(tasksDone/totalTasks)*100}%"></div>
+                            </div>
+                            <div class="space-y-1.5">
+                                ${HABIT_SYSTEM.dailyHabits.map(habit => {
+                                    const done = today.checklist[habit.id];
+                                    const streak = this.state.getHabitStreak(habit.id);
+                                    const bg = done ? 'bg-titan-success/5 border-titan-success/30' : 'bg-titan-panel border-titan-border';
+                                    const iconColor = done ? 'text-titan-success' : 'text-titan-textMuted';
+                                    const textColor = done ? 'text-titan-textMuted line-through' : 'text-white';
+                                    return `
+                                        <div class="${bg} rounded-xl p-2.5 border flex items-center justify-between transition-all cursor-pointer active:scale-[0.98]" onclick="app.handleChecklist('${habit.id}')">
+                                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                                <div class="w-7 h-7 rounded-lg ${done ? 'bg-titan-success' : 'bg-titan-card'} flex items-center justify-center border ${done ? 'border-titan-success' : 'border-titan-border'} transition-colors shrink-0">
+                                                    <i class="fa-solid ${done ? 'fa-check' : habit.icon} ${done ? 'text-white' : iconColor} text-xs"></i>
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-xs font-bold ${textColor} truncate">${habit.name}</div>
+                                                    ${habit.description ? `<div class="text-[9px] text-titan-textMuted truncate">${habit.description}</div>` : ''}
+                                                </div>
+                                            </div>
+                                            ${streak > 0 ? `
+                                                <div class="flex items-center gap-1 bg-titan-card px-2 py-0.5 rounded-full border border-titan-border shrink-0 ml-2">
+                                                    <i class="fa-solid fa-fire text-[9px] ${streak >= 7 ? 'text-orange-400' : 'text-titan-primary'}"></i>
+                                                    <span class="text-[10px] font-bold ${streak >= 7 ? 'text-orange-400' : 'text-titan-primary'}">${streak}</span>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Weight Log -->
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card">
+                            <h2 class="text-xs font-bold text-titan-textMuted uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-scale-unbalanced text-titan-primary"></i> Bodyweight Log</h2>
+                            <div class="flex gap-3">
+                                <div class="relative flex-1">
+                                    <input type="number" inputmode="decimal" step="0.1" id="bw-input" placeholder="${MASTER_PLAN.baselineWeight}.0" class="w-full bg-titan-panel border border-titan-border rounded-xl pl-4 pr-10 py-3 font-display font-bold text-lg text-white focus:outline-none focus:border-titan-primary">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-titan-textMuted text-xs font-bold">KG</span>
+                                </div>
+                                <button onclick="app.saveBodyWeight()" class="fitness-button bg-titan-primary text-titan-bg font-bold px-6 rounded-xl shadow-lg shadow-titan-primary/20 hover:bg-titan-primaryHover">LOG</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = html;
+            }
+
+            createProgressRing(label, current, max, percent, color) {
+                const radius = 38;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (percent / 100) * circumference;
+                return `
+                    <div class="flex flex-col items-center">
+                        <div class="relative w-[100px] h-[100px] flex items-center justify-center">
+                            <svg class="w-full h-full absolute top-0 left-0" viewBox="0 0 100 100">
+                                <circle class="text-titan-border stroke-current" stroke-width="6" cx="50" cy="50" r="${radius}" fill="transparent"></circle>
+                                <circle class="progress-ring__circle stroke-current" stroke-width="6" stroke-linecap="round" cx="50" cy="50" r="${radius}" fill="transparent"
+                                    style="stroke: ${color}; stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};"></circle>
+                            </svg>
+                            <div class="text-center absolute z-10 flex flex-col items-center justify-center w-full h-full">
+                                <span class="text-2xl font-display font-bold leading-none text-white">${current}</span>
+                                <span class="text-[10px] font-medium text-titan-textMuted mt-1">/ ${max}</span>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold mt-3 uppercase tracking-widest" style="color: ${color}">${label}</span>
+                    </div>
+                `;
+            }
+
+            handleChecklist(item) {
+                this.state.toggleChecklist(item);
+                this.state.updateHabitStreaks();
+                const streak = this.state.getHabitStreak(item);
+                if (this.state.getTodayData().checklist[item]) {
+                    this.showToast(`${item.toUpperCase()} ✓ · ${streak} day streak`, 'success');
+                    this.playBeep(660, 80);
+                }
+                this.navigate('dashboard');
+            }
+
+            saveBodyWeight() {
+                const val = document.getElementById('bw-input').value;
+                if (!val) { this.showToast('Enter weight.', 'error'); return; }
+                const num = parseFloat(val);
+                if (isNaN(num) || num < 30 || num > 250) {
+                    this.showToast('Enter realistic weight (30-250kg).', 'error'); return;
+                }
+                this.state.logBodyWeight(num);
+                this.showToast(`Weight: ${num}kg`, 'success');
+                document.getElementById('bw-input').value = '';
+            }
+
+            logSleep() {
+                const val = document.getElementById('sleep-input').value;
+                if (!val) return;
+                this.state.logSleep(val);
+                this.showToast(`Sleep: ${val}h logged`, 'success');
+                this.navigate('dashboard');
+            }
+
+            logSteps() {
+                const val = document.getElementById('steps-input').value;
+                if (!val) return;
+                this.state.logSteps(val);
+                const goal = val >= this.state.state.stepsTarget;
+                this.showToast(`Steps: ${val} ${goal ? '✓' : ''}`, goal ? 'success' : 'info');
+                this.navigate('dashboard');
+            }
+
+            renderMeals(container) {
+                const todayMeals = this.state.getTodayMeals();
+                const today = this.state.getTodayData();
+                const totalProtein = todayMeals.reduce((sum, m) => sum + (m.protein || 0), 0);
+                const totalCal = todayMeals.reduce((sum, m) => sum + (m.calories || 0), 0);
+                const proteinTarget = MASTER_PLAN.targets.protein;
+                const proteinPercent = Math.min((totalProtein / proteinTarget) * 100, 100);
+                const goodMeals = todayMeals.filter(m => m.protein >= HABIT_SYSTEM.proteinPerMeal * 0.7).length;
+                
+                container.innerHTML = `
+                    <div class="fade-in space-y-5">
+                        <div class="glass-panel p-5 rounded-2xl bg-gradient-to-br from-titan-card to-titan-panel border border-titan-primary/30">
+                            <h2 class="text-[10px] font-bold text-titan-primary uppercase tracking-widest mb-3">Today's Intake</h2>
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div class="bg-titan-panel/60 rounded-xl p-3 border border-titan-border/50">
+                                    <div class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest">Protein</div>
+                                    <div class="text-2xl font-display font-bold ${totalProtein >= proteinTarget ? 'text-titan-success' : 'text-titan-primary'}">${totalProtein.toFixed(0)}g</div>
+                                    <div class="text-[10px] text-titan-textMuted">/ ${proteinTarget}g target</div>
+                                </div>
+                                <div class="bg-titan-panel/60 rounded-xl p-3 border border-titan-border/50">
+                                    <div class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest">Calories</div>
+                                    <div class="text-2xl font-display font-bold text-titan-accent">${totalCal.toFixed(0)}</div>
+                                    <div class="text-[10px] text-titan-textMuted">/ ${MASTER_PLAN.targets.calories} target</div>
+                                </div>
+                            </div>
+                            <div class="w-full bg-titan-panel rounded-full h-2 overflow-hidden border border-titan-border">
+                                <div class="bg-gradient-to-r from-titan-primary to-titan-accent h-full transition-all duration-700" style="width: ${proteinPercent}%"></div>
+                            </div>
+                        </div>
+
+                        ${todayMeals.length > 0 ? `
+                            <div class="glass-panel p-4 rounded-2xl bg-titan-card border ${goodMeals >= 3 ? 'border-titan-success/30' : 'border-titan-border'}">
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-lightbulb ${goodMeals >= 3 ? 'text-titan-success' : 'text-titan-primary'} mt-0.5"></i>
+                                    <div class="text-xs text-titan-textMain leading-relaxed">
+                                        <strong class="text-white">Meal Distribution:</strong> 
+                                        ${goodMeals >= 3 ? `${goodMeals} meals hit 25g+ protein. Excellent for muscle protein synthesis.` : `${goodMeals}/${todayMeals.length} meals hit 25g+ protein. Aim for 4 meals × 35g to maximize MPS.`}
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card border border-titan-border">
+                            <h2 class="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-bolt text-titan-primary"></i> Quick Add</h2>
+                            <div class="grid grid-cols-2 gap-2">
+                                ${HABIT_SYSTEM.mealPresets.map(preset => `
+                                    <button onclick="app.addPresetMeal('${preset.name}', ${preset.protein}, ${preset.calories}, '${preset.emoji}')" class="fitness-button bg-titan-panel border border-titan-border rounded-xl p-3 text-left hover:border-titan-primary transition-colors active:scale-95">
+                                        <div class="text-sm font-bold text-white">${preset.emoji} ${preset.name}</div>
+                                        <div class="text-[10px] text-titan-textMuted mt-1"><span class="text-titan-primary font-bold">${preset.protein}g</span> · <span class="text-titan-accent font-bold">${preset.calories} kcal</span></div>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card border border-titan-border">
+                            <h2 class="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-plus text-titan-primary"></i> Custom Meal</h2>
+                            <div class="space-y-3">
+                                <input type="text" id="meal-name" placeholder="Meal name" class="w-full bg-titan-panel border border-titan-border rounded-xl p-3 text-sm text-white focus:outline-none focus:border-titan-primary">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="relative">
+                                        <input type="number" inputmode="numeric" id="meal-protein" placeholder="0" class="w-full bg-titan-panel border border-titan-border rounded-xl pl-3 pr-12 py-3 font-display font-bold text-white focus:outline-none focus:border-titan-primary">
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-titan-textMuted text-[10px] font-bold">g PRO</span>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="number" inputmode="numeric" id="meal-calories" placeholder="0" class="w-full bg-titan-panel border border-titan-border rounded-xl pl-3 pr-12 py-3 font-display font-bold text-white focus:outline-none focus:border-titan-primary">
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-titan-textMuted text-[10px] font-bold">KCAL</span>
+                                    </div>
+                                </div>
+                                <button onclick="app.addCustomMeal()" class="fitness-button w-full bg-titan-primary text-titan-bg py-3 rounded-xl font-bold uppercase tracking-widest text-xs"><i class="fa-solid fa-plus mr-2"></i>Log Meal</button>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card border border-titan-border">
+                            <h2 class="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-list text-titan-primary"></i> Today's Log (${todayMeals.length})</h2>
+                            ${todayMeals.length === 0 ? `<p class="text-sm text-titan-textMuted text-center py-6">No meals yet. Add your first.</p>` : `
+                                <div class="space-y-2">
+                                    ${todayMeals.slice().reverse().map(meal => `
+                                        <div class="flex items-center justify-between bg-titan-panel/60 rounded-xl p-3 border ${meal.protein >= 25 ? 'border-titan-success/30' : 'border-titan-border/50'}">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-bold text-white truncate">${meal.emoji} ${meal.name}</div>
+                                                <div class="text-[10px] text-titan-textMuted mt-0.5">${meal.time} · <span class="text-titan-primary font-bold">${meal.protein}g</span> · <span class="text-titan-accent font-bold">${meal.calories} kcal</span></div>
+                                            </div>
+                                            <button onclick="app.removeMeal('${meal.id}')" class="w-8 h-8 rounded-lg bg-titan-card border border-titan-border text-titan-textMuted hover:text-titan-danger hover:border-titan-danger transition-colors ml-2"><i class="fa-solid fa-trash text-xs"></i></button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }
+
+            addPresetMeal(name, protein, calories, emoji) {
+                this.state.addMeal(name, protein, calories, emoji);
+                this.showToast(`+${protein}g protein · ${name}`, 'success');
+                this.playBeep(660, 80);
+                this.navigate('meals');
+            }
+
+            addCustomMeal() {
+                const name = document.getElementById('meal-name').value.trim();
+                const protein = document.getElementById('meal-protein').value;
+                const calories = document.getElementById('meal-calories').value;
+                if (!name || !protein) { this.showToast('Enter meal name and protein.', 'error'); return; }
+                this.state.addMeal(name, protein, calories || 0);
+                this.showToast(`Logged: ${name}`, 'success');
+                this.playBeep(660, 80);
+                this.navigate('meals');
+            }
+
+            removeMeal(mealId) {
+                this.state.removeMeal(mealId);
+                this.showToast('Meal removed.', 'info');
+                this.navigate('meals');
+            }
+
+            renderWorkout(container) {
+                const dayOfWeek = new Date().getDay();
+                const todayWorkout = MASTER_PLAN.routine[dayOfWeek];
+                const isDeload = this.state.isDeloadWeek();
+
+                if (!todayWorkout || todayWorkout.exercises.length === 0) {
+                    container.innerHTML = `
+                        <div class="fade-in flex flex-col items-center justify-center h-full min-h-[60vh] text-center px-6">
+                            <div class="w-24 h-24 rounded-full bg-titan-card flex items-center justify-center mb-6 shadow-xl border border-titan-border">
+                                <i class="fa-solid fa-bed text-4xl text-titan-accent"></i>
+                            </div>
+                            <h2 class="text-2xl font-display font-bold text-white mb-2 uppercase tracking-wide">Rest Protocol Active</h2>
+                            <p class="text-sm text-titan-textMuted max-w-xs">Muscle tissue is synthesized during recovery, not stimulation. Hold the line.</p>
                         </div>
                     `;
-                    grid.appendChild(card);
+                    return;
+                }
+
+                let html = `
+                    <div class="fade-in space-y-4">
+                        <div class="glass-panel p-5 rounded-2xl border-l-4 ${isDeload ? 'border-l-titan-accent bg-titan-accent/5' : 'border-l-titan-primary bg-titan-primary/5'} flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="text-lg font-display font-bold text-white uppercase tracking-wider leading-none">${todayWorkout.name}</h2>
+                                <p class="text-xs font-medium text-titan-textMuted mt-2 uppercase tracking-widest">
+                                    <i class="fa-solid fa-bullseye mr-1"></i> ${isDeload ? 'Deload: 50% Volume' : 'Objective: Hypertrophy'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Warm-up Banner -->
+                        <details class="glass-panel rounded-2xl bg-titan-card border border-titan-border overflow-hidden">
+                            <summary class="p-4 cursor-pointer flex items-center justify-between list-none">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-titan-primary/10 flex items-center justify-center"><i class="fa-solid fa-fire text-titan-primary text-xs"></i></div>
+                                    <div>
+                                        <span class="text-xs font-bold text-white uppercase tracking-wider">Warm-Up Protocol</span>
+                                        <span class="text-[10px] text-titan-textMuted block">2-3 min · Mandatory</span>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-titan-textMuted text-xs"></i>
+                            </summary>
+                            <div class="px-4 pb-4 text-xs text-titan-textMuted space-y-2 border-t border-titan-border pt-3">
+                                <p>• <strong class="text-white">30s jumping jacks</strong> or march in place</p>
+                                <p>• <strong class="text-white">10 arm circles</strong> each direction</p>
+                                <p>• <strong class="text-white">10 bodyweight squats</strong></p>
+                                <p>• <strong class="text-white">10 hip hinges</strong> (RDL pattern)</p>
+                                <p>• <strong class="text-white">1 light warm-up set</strong> of first exercise</p>
+                            </div>
+                        </details>
+                `;
+
+                todayWorkout.exercises.forEach((ex, index) => {
+                    const loggedData = this.state.getExerciseLog(ex.id);
+                    const lastSession = this.state.getLastSession(ex.id);
+                    const pr = this.state.state.personalRecords[ex.id];
+                    const effectiveSets = isDeload ? Math.max(1, Math.ceil(ex.sets / 2)) : ex.sets;
+
+                    let lastStr = '';
+                    if (lastSession) {
+                        const sets = Object.values(lastSession).filter(s => s.reps > 0);
+                        if (sets.length) lastStr = `<span class="text-[10px] text-titan-primary uppercase tracking-widest font-bold"><i class="fa-solid fa-history mr-1"></i>Last: ${Math.max(...sets.map(s => s.reps))}</span>`;
+                    }
+
+                    const suggestion = this.state.getOverloadSuggestion(ex.id, ex.reps);
+                    const suggestionHtml = suggestion ? `<span class="text-[10px] text-titan-success font-bold uppercase tracking-widest"><i class="fa-solid fa-arrow-trend-up mr-1"></i>${suggestion.message}</span>` : '';
+
+                    html += `
+                        <div class="glass-panel rounded-2xl overflow-hidden bg-titan-card transition-all duration-300">
+                            <div class="p-4 flex justify-between items-center cursor-pointer active:bg-titan-border/50" onclick="document.getElementById('ex-${ex.id}').classList.toggle('hidden')">
+                                <div class="flex items-center gap-3 flex-1 min-w-0">
+                                    <div class="w-8 h-8 rounded-full bg-titan-panel border border-titan-border flex items-center justify-center text-xs font-bold text-titan-textMuted shrink-0 shadow-inner">${index + 1}</div>
+                                    <div class="min-w-0 flex-1">
+                                        <h3 class="font-bold text-[15px] text-white truncate">${ex.name}</h3>
+                                        <div class="flex items-center mt-1 flex-wrap gap-2">
+                                            <span class="text-[10px] text-titan-textMuted uppercase tracking-widest">${effectiveSets} x ${ex.reps}</span>
+                                            ${lastStr} ${suggestionHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 shrink-0 ml-2">
+                                    ${pr ? `<i class="fa-solid fa-crown text-yellow-500 text-xs shadow-yellow-500/50 drop-shadow-md"></i>` : ''}
+                                    <button onclick="event.stopPropagation(); app.showFormGuide(${dayOfWeek}, '${ex.id}')" class="w-8 h-8 rounded-full bg-titan-panel border border-titan-border text-titan-textMuted hover:text-titan-primary hover:border-titan-primary transition-all flex items-center justify-center"><i class="fa-solid fa-video text-xs"></i></button>
+                                </div>
+                            </div>
+                            <div id="ex-${ex.id}" class="px-4 pb-4 hidden border-t border-titan-border/50 pt-4 bg-titan-panel/50">
+                                <div class="space-y-3">
+                                    <div class="flex text-[10px] font-bold text-titan-textMuted uppercase tracking-widest px-2 pb-1 border-b border-titan-border/50">
+                                        <div class="w-8 text-center">Set</div><div class="flex-1 text-center">Reps</div><div class="flex-1 text-center">KG</div><div class="w-10 text-center">Done</div>
+                                    </div>
+                    `;
+
+                    for (let i = 1; i <= effectiveSets; i++) {
+                        const setLog = loggedData[i] || { reps: '', weight: '' };
+                        const isDone = setLog.reps !== '' && setLog.reps !== 0;
+                        const rowBg = isDone ? 'bg-titan-success/5 border-titan-success/30' : 'bg-titan-panel border-titan-border';
+                        html += `
+                                    <div class="flex items-center gap-3 p-2 rounded-xl border ${rowBg} transition-colors duration-300">
+                                        <div class="w-8 text-center text-xs font-bold ${isDone ? 'text-titan-success' : 'text-titan-textMuted'}">${i}</div>
+                                        <input type="number" inputmode="numeric" id="rep-${ex.id}-${i}" placeholder="${ex.reps}" value="${setLog.reps || ''}" class="flex-1 bg-titan-card border border-titan-border rounded-lg px-2 py-2 text-center text-sm font-display font-bold text-white focus:outline-none focus:border-titan-primary transition-colors">
+                                        <input type="number" inputmode="decimal" id="wt-${ex.id}-${i}" placeholder="0" value="${setLog.weight || ''}" class="flex-1 bg-titan-card border border-titan-border rounded-lg px-2 py-2 text-center text-sm font-display font-bold text-white focus:outline-none focus:border-titan-primary transition-colors">
+                                        <button onclick="app.saveSet('${ex.id}', ${i})" class="w-10 h-10 rounded-lg flex items-center justify-center border ${isDone ? 'bg-titan-success text-titan-bg border-titan-success' : 'bg-titan-card border-titan-border text-titan-textMuted hover:text-titan-primary hover:border-titan-primary'} transition-all fitness-button"><i class="fa-solid fa-check text-sm"></i></button>
+                                    </div>
+                        `;
+                    }
+                    html += `
+                                </div>
+                                <div class="mt-4 flex gap-2">
+                                    <button onclick="app.startRestTimer(45)" class="flex-1 fitness-button py-2.5 rounded-xl border border-titan-border text-titan-textMuted text-[10px] font-bold uppercase tracking-widest hover:border-titan-primary hover:text-titan-primary transition-colors">45s</button>
+                                    <button onclick="app.startRestTimer(90)" class="flex-1 fitness-button py-2.5 rounded-xl border border-titan-primary/40 text-titan-primary text-[10px] font-bold uppercase tracking-widest bg-titan-primary/5">90s</button>
+                                    <button onclick="app.startRestTimer(180)" class="flex-1 fitness-button py-2.5 rounded-xl border border-titan-border text-titan-textMuted text-[10px] font-bold uppercase tracking-widest hover:border-titan-primary hover:text-titan-primary transition-colors">3m</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 });
+                
+                html += `
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card mt-4">
+                            <h3 class="text-xs font-bold text-titan-textMuted uppercase tracking-widest mb-3">Session Log</h3>
+                            <textarea id="workout-notes" rows="3" placeholder="How did the weight feel today? Any pain points?" class="w-full bg-titan-panel border border-titan-border rounded-xl p-3 text-sm text-white focus:outline-none focus:border-titan-primary resize-none transition-colors" onchange="app.saveNotes(this.value)">${this.state.getTodayData().notes || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = html;
             }
-            loadSavedState();
-        }
 
-        // Update progress
-        function updateProgress() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-            completedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            saveNotes(val) { this.state.state.dailyLogs[this.state.today].notes = val; this.state.saveState(); }
+
+            showFormGuide(dayId, exId) {
+                const exercise = MASTER_PLAN.routine[dayId].exercises.find(e => e.id === exId);
+                if (!exercise) return;
+                
+                document.getElementById('modal-title').textContent = exercise.name;
+                const modal = document.getElementById('form-modal');
+                const content = document.getElementById('form-modal-content');
+
+                const cuesHtml = exercise.cues.map(c => `<li class="flex items-start gap-3 text-sm text-titan-textMain"><i class="fa-solid fa-circle-check text-titan-success mt-1 text-xs shrink-0"></i><span class="leading-relaxed">${c}</span></li>`).join('');
+                const mistakesHtml = exercise.mistakes.map(m => `<li class="flex items-start gap-3 text-sm text-titan-textMain"><i class="fa-solid fa-circle-xmark text-titan-danger mt-1 text-xs shrink-0"></i><span class="leading-relaxed">${m}</span></li>`).join('');
+
+                content.innerHTML = `
+                    <div class="w-full aspect-video bg-titan-bg border-b border-titan-border relative overflow-hidden group">
+                        ${exercise.gif ? `<img src="${exercise.gif}" alt="${exercise.name} form" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+                        <div class="w-full h-full flex-col items-center justify-center ${exercise.gif ? 'hidden' : 'flex'} absolute inset-0 bg-gradient-to-br from-titan-panel to-titan-bg">
+                            <i class="fa-solid fa-video text-4xl text-titan-primary/30 mb-3"></i>
+                            <p class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest">No Visual Available</p>
+                            <p class="text-[9px] text-titan-textMuted/60 mt-1">Follow the cues below</p>
+                        </div>
+                        <div class="absolute bottom-2 right-2 bg-black/70 backdrop-blur px-2 py-1 rounded text-[9px] text-white font-bold tracking-widest uppercase"><i class="fa-solid fa-play mr-1 text-titan-primary"></i> KINEMATICS</div>
+                    </div>
+                    <div class="p-5 space-y-6">
+                        <div><h4 class="text-[10px] font-bold text-titan-success uppercase tracking-widest mb-3 border-b border-titan-border pb-2">Optimal Execution</h4><ul class="space-y-3">${cuesHtml}</ul></div>
+                        <div><h4 class="text-[10px] font-bold text-titan-danger uppercase tracking-widest mb-3 border-b border-titan-border pb-2">Error Vectors (Avoid)</h4><ul class="space-y-3">${mistakesHtml}</ul></div>
+                    </div>
+                `;
+                modal.classList.remove('hidden');
+            }
+
+            saveSet(exId, setIdx) {
+                const reps = document.getElementById(`rep-${exId}-${setIdx}`).value;
+                const weight = document.getElementById(`wt-${exId}-${setIdx}`).value;
+                if (!reps) { this.showToast('Enter rep count.', 'error'); return; }
+                this.state.logExerciseSet(exId, setIdx, reps, weight);
+                this.showToast(`Set logged successfully.`, 'success');
+                this.playBeep(660, 100);
+                this.startRestTimer(90);
+                setTimeout(() => this.navigate('workout'), 300);
+            }
+
+            startRestTimer(seconds) {
+                this.stopRestTimer();
+                const el = document.getElementById('rest-timer');
+                const display = document.getElementById('timer-display');
+                el.classList.remove('hidden');
+                let remaining = seconds;
+                const update = () => {
+                    const m = Math.floor(remaining / 60);
+                    const s = remaining % 60;
+                    display.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                    if (remaining <= 0) {
+                        this.stopRestTimer();
+                        this.showToast('Rest complete. Execute next set.', 'success');
+                        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                        this.playBeep(880, 200);
+                        setTimeout(() => this.playBeep(1100, 300), 250);
+                    }
+                    remaining--;
+                };
+                update();
+                this.restTimerInterval = setInterval(update, 1000);
+            }
             
-            const percentage = (completedCount / totalExercises) * 100;
-            document.getElementById('progressFill').style.width = percentage + '%';
-            document.getElementById('progress-text').textContent = `${completedCount}/${totalExercises}`;
-            
-            // Save to localStorage
-            const completed = {};
-            checkboxes.forEach((cb, index) => {
-                if (cb.id) completed[cb.id] = cb.checked;
-            });
-            localStorage.setItem('completed', JSON.stringify(completed));
-        }
+            stopRestTimer() {
+                if (this.restTimerInterval) clearInterval(this.restTimerInterval);
+                this.restTimerInterval = null;
+                document.getElementById('rest-timer').classList.add('hidden');
+            }
 
-        // Save notes
-        function saveNotes(input, id) {
-            const notes = JSON.parse(localStorage.getItem('notes') || '{}');
-            notes[id] = input.value;
-            localStorage.setItem('notes', JSON.stringify(notes));
-        }
+            renderNutrition(container) {
+                const today = this.state.getTodayData();
+                container.innerHTML = `
+                    <div class="fade-in space-y-5">
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card border-l-4 border-l-titan-accent">
+                            <h2 class="text-sm font-display font-bold text-white uppercase tracking-wider mb-1">Surplus Required</h2>
+                            <p class="text-xs text-titan-textMuted leading-relaxed">Target: Lean Bulk. Consistent surplus is mandatory for tissue generation.</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="glass-panel p-4 rounded-2xl flex flex-col items-center border border-titan-border bg-titan-panel">
+                                <div class="w-10 h-10 rounded-full bg-titan-accent/10 flex items-center justify-center mb-3"><i class="fa-solid fa-fire text-titan-accent text-lg"></i></div>
+                                <span class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest mb-2">Calories</span>
+                                <input type="number" inputmode="numeric" id="input-kcal" value="${today.macros.calories || ''}" placeholder="2650" class="w-full bg-titan-card border border-titan-border rounded-xl p-2 text-center text-xl font-display font-bold text-white focus:outline-none focus:border-titan-accent mb-2">
+                                <span class="text-[9px] font-bold text-titan-textMuted uppercase tracking-widest">Goal: ${MASTER_PLAN.targets.calories}</span>
+                            </div>
+                            <div class="glass-panel p-4 rounded-2xl flex flex-col items-center border border-titan-border bg-titan-panel">
+                                <div class="w-10 h-10 rounded-full bg-titan-primary/10 flex items-center justify-center mb-3"><i class="fa-solid fa-drumstick-bite text-titan-primary text-lg"></i></div>
+                                <span class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest mb-2">Protein (g)</span>
+                                <input type="number" inputmode="numeric" id="input-pro" value="${today.macros.protein || ''}" placeholder="140" class="w-full bg-titan-card border border-titan-border rounded-xl p-2 text-center text-xl font-display font-bold text-white focus:outline-none focus:border-titan-primary mb-2">
+                                <span class="text-[9px] font-bold text-titan-textMuted uppercase tracking-widest">Goal: ${MASTER_PLAN.targets.protein}g</span>
+                            </div>
+                        </div>
+                        <button onclick="app.saveNutrition()" class="fitness-button w-full bg-titan-primary text-titan-bg py-4 rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-titan-primary/20 hover:bg-titan-primaryHover">Save Fuel Data</button>
+                        
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card">
+                             <h3 class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest mb-3 border-b border-titan-border pb-2">Secondary Macros</h3>
+                             <div class="flex justify-between items-center py-2"><span class="text-sm font-medium text-titan-textMain">Carbohydrates</span><span class="text-sm font-display font-bold text-white">${MASTER_PLAN.targets.carbs}g</span></div>
+                             <div class="flex justify-between items-center py-2 border-t border-titan-border/50"><span class="text-sm font-medium text-titan-textMain">Dietary Fats</span><span class="text-sm font-display font-bold text-white">${MASTER_PLAN.targets.fats}g</span></div>
+                        </div>
+                    </div>
+                `;
+            }
 
-        // Load saved state
-        function loadSavedState() {
-            const saved = localStorage.getItem('completed');
-            if (saved) {
-                const completed = JSON.parse(saved);
-                Object.keys(completed).forEach(id => {
-                    const cb = document.getElementById(id);
-                    if (cb) cb.checked = completed[id];
+            saveNutrition() {
+                this.state.updateMacro('calories', document.getElementById('input-kcal').value);
+                this.state.updateMacro('protein', document.getElementById('input-pro').value);
+                this.showToast('Nutrition sync complete.', 'success');
+            }
+
+            renderProgress(container) {
+                const weights = this.state.state.weeklyWeights;
+                const prs = this.state.state.personalRecords;
+                const avg7d = this.state.get7DayAvgWeight();
+                const weeklyChange = this.state.getWeeklyWeightChange();
+                const fatigue = this.state.checkFatigue();
+                
+                const workoutDays = Object.values(this.state.state.dailyLogs).filter(d => d.checklist?.workout).length;
+                let totalVolume = 0;
+                Object.values(this.state.state.dailyLogs).forEach(log => {
+                    Object.values(log.workoutData).forEach(ex => {
+                        Object.values(ex).forEach(set => { totalVolume += (set.reps || 0) * (set.weight || 0); });
+                    });
                 });
-                updateProgress();
-            }
-            
-            const savedNotes = localStorage.getItem('notes');
-            if (savedNotes) {
-                const notes = JSON.parse(savedNotes);
-                Object.keys(notes).forEach(id => {
-                    const input = document.querySelector(`#${id} + label + .weight-input`);
-                    if (input) input.value = notes[id];
+
+                const habitCompletion = {};
+                HABIT_SYSTEM.dailyHabits.forEach(h => {
+                    const days = Object.values(this.state.state.dailyLogs).filter(d => d.checklist?.[h.id]).length;
+                    habitCompletion[h.id] = { name: h.name, days, streak: this.state.getHabitStreak(h.id) };
                 });
+
+                let chartHtml = weights.length >= 2 
+                    ? `<canvas id="weightChart" height="220" class="w-full"></canvas>` 
+                    : `<div class="text-center text-sm text-titan-textMuted py-10 flex flex-col items-center"><div class="w-16 h-16 rounded-full bg-titan-panel border border-titan-border flex items-center justify-center mb-4"><i class="fa-solid fa-chart-line text-2xl text-titan-border"></i></div>Log bodyweight for 2+ days to see trend.</div>`;
+
+                let fatigueBanner = '';
+                if (fatigue.status === 'deload') {
+                    fatigueBanner = `<div class="glass-panel p-4 rounded-2xl bg-titan-danger/5 border border-titan-danger/30"><div class="flex items-start gap-3"><i class="fa-solid fa-triangle-exclamation text-titan-danger mt-0.5"></i><div class="text-xs text-titan-textMain"><strong class="text-titan-danger">Deload Recommended:</strong> ${fatigue.warnings.join(', ')}. Reduce volume 50% this week.</div></div></div>`;
+                } else if (fatigue.status === 'caution') {
+                    fatigueBanner = `<div class="glass-panel p-4 rounded-2xl bg-yellow-500/5 border border-yellow-500/30"><div class="flex items-start gap-3"><i class="fa-solid fa-eye text-yellow-500 mt-0.5"></i><div class="text-xs text-titan-textMain"><strong class="text-yellow-500">Monitor:</strong> ${fatigue.warnings.join(', ')}. Prioritize sleep.</div></div></div>`;
+                }
+
+                let weightInsight = '';
+                if (weeklyChange !== null) {
+                    if (weeklyChange > 0.5) weightInsight = `<span class="text-titan-accent font-bold">+${weeklyChange}kg/week — too fast. Reduce 200 cal.</span>`;
+                    else if (weeklyChange > 0.2) weightInsight = `<span class="text-titan-success font-bold">+${weeklyChange}kg/week — ideal lean bulk.</span>`;
+                    else if (weeklyChange > -0.1) weightInsight = `<span class="text-titan-textMuted font-bold">${weeklyChange}kg — stalled. Add 200 cal.</span>`;
+                    else weightInsight = `<span class="text-titan-danger font-bold">${weeklyChange}kg — losing weight. Eat more.</span>`;
+                }
+
+                const allEx = {};
+                Object.values(MASTER_PLAN.routine).forEach(d => d.exercises?.forEach(e => allEx[e.id] = e.name));
+                const prKeys = Object.keys(prs);
+
+                container.innerHTML = `
+                    <div class="fade-in space-y-5">
+                        ${fatigueBanner}
+                        <div class="glass-panel p-5 rounded-2xl bg-gradient-to-br from-titan-card to-titan-panel border border-titan-primary/30">
+                            <h2 class="text-[10px] font-bold text-titan-primary uppercase tracking-widest mb-3">Weekly Overview</h2>
+                            <div class="grid grid-cols-3 gap-2 mb-4">
+                                <div class="bg-titan-panel/60 rounded-xl p-2.5 text-center border border-titan-border/50">
+                                    <div class="text-[9px] font-bold text-titan-textMuted uppercase tracking-widest">Weight</div>
+                                    <div class="text-lg font-display font-bold text-white">${avg7d || '—'}</div>
+                                    <div class="text-[9px] text-titan-textMuted">7-day avg</div>
+                                </div>
+                                <div class="bg-titan-panel/60 rounded-xl p-2.5 text-center border border-titan-border/50">
+                                    <div class="text-[9px] font-bold text-titan-textMuted uppercase tracking-widest">Sessions</div>
+                                    <div class="text-lg font-display font-bold text-titan-primary">${workoutDays}</div>
+                                    <div class="text-[9px] text-titan-textMuted">total</div>
+                                </div>
+                                <div class="bg-titan-panel/60 rounded-xl p-2.5 text-center border border-titan-border/50">
+                                    <div class="text-[9px] font-bold text-titan-textMuted uppercase tracking-widest">Volume</div>
+                                    <div class="text-lg font-display font-bold text-titan-accent">${(totalVolume/1000).toFixed(1)}k</div>
+                                    <div class="text-[9px] text-titan-textMuted">kg lifted</div>
+                                </div>
+                            </div>
+                            ${weeklyChange !== null ? `<div class="text-[10px] text-center pt-3 border-t border-titan-border">Weekly trend: ${weightInsight}</div>` : ''}
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card">
+                            <h2 class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest border-b border-titan-border pb-2 mb-4">Mass Trajectory</h2>
+                            ${chartHtml}
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card">
+                            <h2 class="text-[10px] font-bold text-titan-primary uppercase tracking-widest border-b border-titan-border pb-2 mb-3">Habit Performance</h2>
+                            <div class="space-y-2">
+                                ${Object.entries(habitCompletion).map(([id, data]) => `
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-titan-textMain truncate flex-1">${data.name}</span>
+                                        <div class="flex items-center gap-3 shrink-0">
+                                            <span class="text-titan-textMuted">${data.days} days</span>
+                                            ${data.streak > 0 ? `<span class="flex items-center gap-1 bg-titan-card px-2 py-0.5 rounded-full border border-titan-border"><i class="fa-solid fa-fire text-[9px] ${data.streak >= 7 ? 'text-orange-400' : 'text-titan-primary'}"></i><span class="font-bold ${data.streak >= 7 ? 'text-orange-400' : 'text-titan-primary'}">${data.streak}</span></span>` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card">
+                            <h2 class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest border-b border-titan-border pb-2 mb-2 flex items-center gap-2"><i class="fa-solid fa-crown"></i> Personal Records</h2>
+                            ${prKeys.length === 0 ? `<p class="text-sm text-titan-textMuted text-center py-6">No records yet. Push harder.</p>` : `<div class="space-y-1">${prKeys.map(id => `<div class="flex justify-between items-center p-3 border-b border-titan-border/50 last:border-0"><span class="text-sm font-medium text-white truncate">${allEx[id] || id}</span><div class="flex items-center gap-2 shrink-0"><span class="text-sm font-display font-bold text-titan-primary">${prs[id].reps} reps</span>${prs[id].weight ? `<span class="text-xs text-titan-textMuted">@ ${prs[id].weight}kg</span>` : ''}</div></div>`).join('')}</div>`}
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card">
+                            <h2 class="text-[10px] font-bold text-titan-textMuted uppercase tracking-widest border-b border-titan-border pb-2 mb-4">Data Management</h2>
+                            <button onclick="app.state.exportData()" class="fitness-button w-full bg-titan-panel border border-titan-success text-titan-success py-3 rounded-xl font-bold text-xs uppercase tracking-widest mb-3 hover:bg-titan-success hover:text-white transition-colors"><i class="fa-solid fa-download mr-2"></i> Export Backup</button>
+                            <p class="text-[10px] text-titan-textMuted text-center">Data stored locally on this device.</p>
+                        </div>
+                    </div>
+                `;
+
+                if (weights.length >= 2) {
+                    setTimeout(() => {
+                        const ctx = document.getElementById('weightChart');
+                        if (ctx) {
+                            new Chart(ctx, {
+                                type: 'line',
+                                data: { labels: weights.map(w => w.date.slice(5)), datasets: [{ label: 'KG', data: weights.map(w => w.weight), borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)', borderWidth: 2, pointBackgroundColor: '#020617', pointBorderColor: '#06b6d4', pointBorderWidth: 2, pointRadius: 4, tension: 0.4, fill: true }] },
+                                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
+                            });
+                        }
+                    }, 50);
+                }
+            }
+
+            renderPsychology(container) {
+                const today = this.state.getTodayData();
+                const tasksDone = Object.values(today.checklist).filter(Boolean).length;
+                const isDeload = this.state.isDeloadWeek();
+
+                let briefingTitle = "Professor's Note";
+                let briefingText = tasksDone === 10 ? "All parameters met. This is how the physiological baseline shifts. Do it again tomorrow. Consistency compounds." :
+                                   tasksDone === 0 ? "Awaiting input. The mind dictates the body's actions. Engage the protocol. Excuses do not generate tissue." :
+                                   "Partial execution detected. Review checklist. Effort is the constant you control.";
+                if (isDeload) {
+                    briefingTitle = "Deload Protocol Active";
+                    briefingText = "Recovery is not weakness. It is strategy. Reduce volume. Sleep more. Eat well. Return stronger next week.";
+                }
+
+                container.innerHTML = `
+                    <div class="fade-in space-y-5">
+                        <div class="glass-panel p-6 rounded-2xl bg-gradient-to-br from-titan-card to-titan-panel border border-titan-border relative overflow-hidden">
+                            <div class="absolute -right-4 -bottom-4 opacity-5 pointer-events-none"><i class="fa-solid fa-brain text-9xl text-white"></i></div>
+                            <h2 class="text-xs font-bold text-titan-primary tracking-widest uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-terminal"></i> ${briefingTitle}</h2>
+                            <p class="text-sm leading-relaxed text-titan-textMain font-medium">"${briefingText}"</p>
+                        </div>
+                        <div class="glass-panel p-5 rounded-2xl bg-titan-card">
+                            <h3 class="text-[10px] font-bold text-titan-textMuted tracking-widest uppercase border-b border-titan-border pb-2 mb-4">System Constants</h3>
+                            <ul class="space-y-4 text-sm text-titan-textMuted">
+                                <li class="flex gap-4 items-start"><div class="w-8 h-8 rounded-full bg-titan-panel border border-titan-border flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-scale-unbalanced text-titan-primary text-xs"></i></div><div><strong class="text-white block mb-0.5">Current Phase: Lean Bulk</strong>Targeting gradual upward weight trend via 2,650 kcal continuous intake.</div></li>
+                                <li class="flex gap-4 items-start"><div class="w-8 h-8 rounded-full bg-titan-panel border border-titan-border flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-calendar-check text-titan-success text-xs"></i></div><div><strong class="text-white block mb-0.5">Methodology: Progressive Overload</strong>Adding reps or weight every session. Deloading every 4th week.</div></li>
+                                <li class="flex gap-4 items-start"><div class="w-8 h-8 rounded-full bg-titan-panel border border-titan-border flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-triangle-exclamation text-titan-accent text-xs"></i></div><div><strong class="text-white block mb-0.5">Primary Focus: V-Taper</strong>Pull-ups are mandatory (Day 2). Form strictness prioritized over volume.</div></li>
+                            </ul>
+                        </div>
+                        <div class="pt-8">
+                            <button onclick="if(confirm('Wipe ALL local data? This cannot be undone.')) { localStorage.clear(); location.reload(); }" class="w-full text-center text-[10px] font-bold text-titan-danger/50 hover:text-titan-danger uppercase tracking-widest p-3 transition-colors">[ System Wipe ]</button>
+                        </div>
+                    </div>
+                `;
             }
         }
 
-        // Day switching
-        function showDay(day) {
-            document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(`day${day}`).classList.add('active');
-            
-            document.querySelectorAll('.day-btn').forEach((btn, i) => {
-                if (i === day-1) btn.classList.add('active');
-                else btn.classList.remove('active');
-            });
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key >= '1' && e.key <= '5') showDay(parseInt(e.key));
-        });
-
-        // Initialize
-        window.onload = loadExercises;
+        // Initialize App Globally
+        window.app = null;
+        window.addEventListener('DOMContentLoaded', () => { window.app = new App(); });
     </script>
 </body>
 </html>
+Displaying project_titan_tracker.html.
